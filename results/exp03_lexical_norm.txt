@@ -1,0 +1,14 @@
+ICD10CM avg variants 1.1769297484822203
+char index 16.6
+ICD10CM char clean {1: 0.2337, 10: 0.4644, 50: 0.5798, 100: 0.6154} 29.9
+ICD10CM char variants {1: 0.2511, 10: 0.5078, 50: 0.6219, 100: 0.6613} 45.2
+bm25 index 3.2
+ICD10CM bm25 clean {1: 0.1795, 10: 0.3868, 50: 0.4909, 100: 0.526} 5.3
+ICD10CM bm25 variants {1: 0.1977, 10: 0.4271, 50: 0.5399, 100: 0.575} 7.8
+SNOMEDCT_US avg variants 1.2344686648501362
+char index 46.5
+SNOMEDCT_US char clean {1: 0.3012, 10: 0.5341, 50: 0.6635, 100: 0.7106} 255.8
+SNOMEDCT_US char variants {1: 0.3272, 10: 0.5693, 50: 0.698, 100: 0.7441} 562.4
+bm25 index 22.8
+SNOMEDCT_US bm25 clean {1: 0.2632, 10: 0.455, 50: 0.5756, 100: 0.6218} 71.4
+SNOMEDCT_US bm25 variants {1: 0.2905, 10: 0.4884, 50: 0.6192, 100: 0.6699} 133.9

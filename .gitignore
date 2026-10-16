@@ -1,0 +1,25 @@
+# --- proprietary data: never commit (challenge rules) ---
+*.csv
+*.xlsx
+*.xls
+data/
+
+# --- generated artifacts (rebuilt by the pipeline) ---
+cache/
+models/
+outputs/
+*.parquet
+*.npy
+*.pkl
+*.pt
+*.safetensors
+
+# --- environment / secrets ---
+.venv/
+venv/
+.env
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.vscode/
+.idea/

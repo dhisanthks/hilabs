@@ -1,0 +1,49 @@
+﻿python.exe : W1017 00:35:27.722000 19640 
+.venv\Lib\site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not 
+supported in Windows or MacOs.
+At line:1 char:511
++ ... NG="utf-8"; & .\.venv\Scripts\python.exe -W ignore experiments\exp02_ ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (W1017 00:35:27....ndows or MacOs.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits 
+and faster downloads.
+
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]
+Loading weights:  31%|███       | 62/199 [00:00<00:00, 614.46it/s]
+Loading weights:  62%|██████▏   | 124/199 [00:00<00:00, 376.68it/s]
+Loading weights:  85%|████████▍ | 169/199 [00:00<00:00, 400.32it/s]
+Loading weights: 100%|██████████| 199/199 [00:00<00:00, 420.38it/s]
+biolord ICD10CM {'R@1': 0.3356, 'R@5': 0.5729, 'R@10': 0.6401, 'R@50': 0.7658, 'R@100': 0.8105, 'kNN@1': 0.4649, 'enc_sec': 323.7}
+biolord SNOMEDCT_US {'R@1': 0.3669, 'R@5': 0.5372, 'R@10': 0.5989, 'R@50': 0.7185, 'R@100': 0.7535, 'kNN@1': 0.2533, 'enc_sec': 765.9}
+biolord total sec 1218.1
+
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]
+Loading weights:  29%|██▊       | 57/199 [00:00<00:00, 559.04it/s]
+Loading weights:  58%|█████▊    | 116/199 [00:00<00:00, 562.89it/s]
+Loading weights: 100%|██████████| 199/199 [00:00<00:00, 948.44it/s]
+medembed ICD10CM {'R@1': 0.2533, 'R@5': 0.451, 'R@10': 0.5269, 'R@50': 0.6678, 'R@100': 0.7138, 'kNN@1': 0.4558, 'enc_sec': 72.8}
+medembed SNOMEDCT_US {'R@1': 0.3723, 'R@5': 0.562, 'R@10': 0.6298, 'R@50': 0.7572, 'R@100': 0.7966, 'kNN@1': 0.2563, 'enc_sec': 339.7}
+medembed total sec 512.8
+
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]
+Loading weights:  37%|███▋      | 73/199 [00:00<00:00, 729.84it/s]
+Loading weights: 100%|██████████| 199/199 [00:00<00:00, 1100.34it/s]
+bge ICD10CM {'R@1': 0.2524, 'R@5': 0.4618, 'R@10': 0.5434, 'R@50': 0.6787, 'R@100': 0.7277, 'kNN@1': 0.4566, 'enc_sec': 73.0}
+bge SNOMEDCT_US {'R@1': 0.3745, 'R@5': 0.564, 'R@10': 0.6313, 'R@50': 0.7591, 'R@100': 0.7977, 'kNN@1': 0.2557, 'enc_sec': 336.5}
+bge total sec 483.2
+
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]
+Loading weights:  24%|██▎       | 47/199 [00:00<00:00, 452.93it/s]
+Loading weights: 100%|██████████| 199/199 [00:00<00:00, 1007.40it/s]
+e5 ICD10CM {'R@1': 0.2428, 'R@5': 0.4276, 'R@10': 0.5117, 'R@50': 0.6622, 'R@100': 0.7082, 'kNN@1': 0.4493, 'enc_sec': 84.4}
+e5 SNOMEDCT_US {'R@1': 0.3804, 'R@5': 0.5597, 'R@10': 0.6267, 'R@50': 0.7478, 'R@100': 0.7906, 'kNN@1': 0.25, 'enc_sec': 424.7}
+e5 total sec 586.8
+
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]
+Loading weights:  30%|███       | 60/199 [00:00<00:00, 591.74it/s]
+Loading weights: 100%|██████████| 199/199 [00:00<00:00, 1099.23it/s]
+medcpt ICD10CM {'R@1': 0.2533, 'R@5': 0.5113, 'R@10': 0.6002, 'R@50': 0.7528, 'R@100': 0.7927, 'kNN@1': 0.4722, 'enc_sec': 69.5}
+medcpt SNOMEDCT_US {'R@1': 0.352, 'R@5': 0.5379, 'R@10': 0.6076, 'R@50': 0.7334, 'R@100': 0.7764, 'kNN@1': 0.2503, 'enc_sec': 324.8}
+medcpt total sec 491.1

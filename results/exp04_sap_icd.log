@@ -1,0 +1,38 @@
+00:38:18 ICD10CM: 457 rows -> 90109 candidates (197/row) retrieval 7s
+00:38:51 ICD10CM: features done 40s, 81 cols
+00:39:08 ICD10CM: 467 rows -> 92617 candidates (198/row) retrieval 13s
+00:39:12 ICD10CM: features done 17s, 81 cols
+00:39:23 ICD10CM: 422 rows -> 82916 candidates (196/row) retrieval 9s
+00:39:26 ICD10CM: features done 12s, 81 cols
+00:39:37 ICD10CM: 480 rows -> 93638 candidates (195/row) retrieval 9s
+00:39:41 ICD10CM: features done 12s, 81 cols
+00:39:51 ICD10CM: 480 rows -> 95063 candidates (198/row) retrieval 8s
+00:39:54 ICD10CM: features done 11s, 81 cols
+00:39:56 ICD10CM candidate recall 0.9306 cands/row 197.0
+00:40:48 ICD10CM {'acc': np.float64(0.6314), 'recall': np.float64(0.9306), 'acc_seen': np.float64(0.708), 'acc_unseen': np.float64(0.3862), 'n_unseen': 549}
+knn_sapbert_rank         103539.0
+dense_sapbert_rank        29900.0
+dense_sapbert_sim         17905.0
+dense_sapbert_sim_gap     15276.0
+knn_sapbert_sum           15194.0
+char_sim_gap               8739.0
+knn_sapbert_max            7273.0
+char_rank                  3912.0
+kchar_max                  3759.0
+c_chapter                  3554.0
+code_prior                 3450.0
+c_leaf                     2811.0
+fz_ratio                   2670.0
+char_sim                   2647.0
+kchar_sum                  2629.0
+group_prior                2540.0
+kchar_rank                 2493.0
+fz_tsort                   2296.0
+fz_tset                    1844.0
+c_other                    1796.0
+c_unspecified              1727.0
+q_nchar                    1677.0
+c_namelen                  1590.0
+bm25_sim                   1532.0
+chap_prior                 1135.0
+{'ICD10CM': {'acc': np.float64(0.6314), 'recall': np.float64(0.9306), 'acc_seen': np.float64(0.708), 'acc_unseen': np.float64(0.3862), 'n_unseen': 549}}

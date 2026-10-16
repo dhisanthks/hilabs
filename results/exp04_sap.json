@@ -1,0 +1,9 @@
+{
+ "ICD10CM": {
+  "acc": 0.6314,
+  "recall": 0.9306,
+  "acc_seen": 0.708,
+  "acc_unseen": 0.3862,
+  "n_unseen": 549
+ }
+}

@@ -1,0 +1,38 @@
+00:21:16 SNOMEDCT_US: 1476 rows -> 164353 candidates (111/row) retrieval 82s
+00:21:27 SNOMEDCT_US: features done 94s, 71 cols
+00:22:46 SNOMEDCT_US: 1487 rows -> 164909 candidates (111/row) retrieval 79s
+00:22:55 SNOMEDCT_US: features done 87s, 71 cols
+00:24:04 SNOMEDCT_US: 1431 rows -> 159703 candidates (112/row) retrieval 68s
+00:24:13 SNOMEDCT_US: features done 78s, 71 cols
+00:25:25 SNOMEDCT_US: 1464 rows -> 162491 candidates (111/row) retrieval 71s
+00:25:35 SNOMEDCT_US: features done 82s, 71 cols
+00:26:49 SNOMEDCT_US: 1482 rows -> 165812 candidates (112/row) retrieval 73s
+00:26:59 SNOMEDCT_US: features done 84s, 71 cols
+00:27:02 SNOMEDCT_US candidate recall 0.8271 cands/row 111.3
+00:28:10 SNOMEDCT_US {'acc': np.float64(0.4391), 'recall': np.float64(0.8271), 'acc_seen': np.float64(0.5566), 'acc_unseen': np.float64(0.2984), 'n_unseen': 3341}
+char_sim_gap      119684.0
+char_rank         110962.0
+kchar_rank         55736.0
+kchar_sum          34410.0
+p_grp_sub          17850.0
+bm25_rank          16905.0
+code_prior         14713.0
+kchar_max          13195.0
+fz_tsort           11596.0
+c_tag              10045.0
+bm25_sim            8866.0
+fz_ratio            8186.0
+char_sim            7849.0
+fz_tset             6449.0
+q_nchar             6210.0
+group_prior         4236.0
+jaccard             3410.0
+q_cover             2887.0
+c_namelen           2590.0
+c_ndesc             2349.0
+q_ntok              1583.0
+kchar_cnt           1159.0
+chap_prior           843.0
+n_variants           739.0
+lat_left_match       546.0
+{'SNOMEDCT_US': {'acc': np.float64(0.4391), 'recall': np.float64(0.8271), 'acc_seen': np.float64(0.5566), 'acc_unseen': np.float64(0.2984), 'n_unseen': 3341}}

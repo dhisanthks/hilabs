@@ -1,0 +1,7 @@
+ICD10CM base lambdarank 600 {'acc': 0.6314, 'recall': 0.9306, 'acc_seen': 0.708, 'acc_unseen': 0.3862, 'acc_given_in_pool': 0.6785}
+ICD10CM lambdarank lr.03 1000 {'acc': 0.6379, 'recall': 0.9306, 'acc_seen': 0.7154, 'acc_unseen': 0.3898, 'acc_given_in_pool': 0.6855}
+ICD10CM lambdarank leaves63 {'acc': 0.6444, 'recall': 0.9306, 'acc_seen': 0.7223, 'acc_unseen': 0.3953, 'acc_given_in_pool': 0.6925}
+ICD10CM lambdarank leaves15 {'acc': 0.6336, 'recall': 0.9306, 'acc_seen': 0.708, 'acc_unseen': 0.3953, 'acc_given_in_pool': 0.6808}
+ICD10CM binary {'acc': 0.6375, 'recall': 0.9306, 'acc_seen': 0.7183, 'acc_unseen': 0.3789, 'acc_given_in_pool': 0.685}
+ICD10CM xendcg {'acc': 0.6253, 'recall': 0.9306, 'acc_seen': 0.7092, 'acc_unseen': 0.357, 'acc_given_in_pool': 0.6719}
+ICD10CM lambdarank trunc5 {'acc': 0.6362, 'recall': 0.9306, 'acc_seen': 0.7137, 'acc_unseen': 0.388, 'acc_given_in_pool': 0.6836}

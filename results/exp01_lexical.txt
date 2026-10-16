@@ -1,0 +1,24 @@
+ICD10CM dict char-tfidf R@1 0.2337
+ICD10CM dict char-tfidf R@5 0.4016
+ICD10CM dict char-tfidf R@10 0.4644
+ICD10CM dict char-tfidf R@50 0.5798
+ICD10CM dict char-tfidf R@100 0.6154
+ICD10CM kNN train-term acc 0.4003 | gold code seen in train fold: 0.7619
+ICD10CM combo th=0.5 0.4115
+ICD10CM combo th=0.6 0.3959
+ICD10CM combo th=0.7 0.3703
+ICD10CM combo th=0.8 0.3448
+ICD10CM combo th=0.9 0.2793
+29.036329746246338
+SNOMEDCT_US dict char-tfidf R@1 0.3012
+SNOMEDCT_US dict char-tfidf R@5 0.4669
+SNOMEDCT_US dict char-tfidf R@10 0.5341
+SNOMEDCT_US dict char-tfidf R@50 0.6635
+SNOMEDCT_US dict char-tfidf R@100 0.7106
+SNOMEDCT_US kNN train-term acc 0.229 | gold code seen in train fold: 0.5448
+SNOMEDCT_US combo th=0.5 0.2662
+SNOMEDCT_US combo th=0.6 0.2952
+SNOMEDCT_US combo th=0.7 0.32
+SNOMEDCT_US combo th=0.8 0.3278
+SNOMEDCT_US combo th=0.9 0.3172
+428.40749168395996

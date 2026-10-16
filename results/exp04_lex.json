@@ -1,0 +1,9 @@
+{
+ "SNOMEDCT_US": {
+  "acc": 0.4391,
+  "recall": 0.8271,
+  "acc_seen": 0.5566,
+  "acc_unseen": 0.2984,
+  "n_unseen": 3341
+ }
+}
