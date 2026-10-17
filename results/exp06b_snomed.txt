@@ -1,0 +1,3 @@
+SNOMEDCT_US leaves63 {'acc': 0.5056, 'recall': 0.9248, 'acc_seen': 0.6112, 'acc_unseen': 0.3792, 'acc_given_in_pool': 0.5467}
+SNOMEDCT_US leaves127 lr.03 {'acc': 0.5069, 'recall': 0.9248, 'acc_seen': 0.6152, 'acc_unseen': 0.3774, 'acc_given_in_pool': 0.5482}
+SNOMEDCT_US leaves63 trunc30 lr.03 {'acc': 0.5071, 'recall': 0.9248, 'acc_seen': 0.6159, 'acc_unseen': 0.3768, 'acc_given_in_pool': 0.5483}

@@ -1,0 +1,16 @@
+{
+ "ICD10CM": {
+  "acc": 0.667,
+  "recall": 0.9575,
+  "acc_seen": 0.745,
+  "acc_unseen": 0.4171,
+  "acc_given_in_pool": 0.6966
+ },
+ "SNOMEDCT_US": {
+  "acc": 0.5109,
+  "recall": 0.9248,
+  "acc_seen": 0.6139,
+  "acc_unseen": 0.3876,
+  "acc_given_in_pool": 0.5524
+ }
+}

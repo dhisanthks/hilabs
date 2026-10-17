@@ -81,3 +81,38 @@ def mine_hard_negatives(oof_cand: pd.DataFrame, train_sys: pd.DataFrame, system:
     top = c.groupby("qid").head(1)
     ents = train_sys["entity"].to_numpy()
     return {(system, ents[q]): cs.codes[ci] for q, ci in zip(top.qid, top.code_idx)}
+
+
+def iterative_hard_negatives(oof_tables: dict, per_sys: dict, k=3, score_col="dense_ft_sim"):
+    """Round-2 negatives: for each training term, the top-k *wrong* codes by the round-1 fine-tuned model's
+    out-of-fold dense similarity. {(system, entity): [code, ...]}"""
+    out = {}
+    for s, c in oof_tables.items():
+        cs = load_system(s)
+        c = c[c.label == 0].sort_values(["qid", score_col], ascending=[True, False]).groupby("qid").head(k)
+        ents = per_sys[s]["entity"].to_numpy()
+        for q, g in c.groupby("qid"):
+            out[(s, ents[q])] = [cs.codes[i] for i in g.code_idx]
+    return out
+
+
+def build_pairs_multi(train: pd.DataFrame, hard_multi: dict, seed=7):
+    """One (anchor, positive, negative) triplet per hard negative (≤k per term); positives cycle through the
+    gold code's first 3 descriptions; anchors mix original and normalized variants."""
+    rng = random.Random(seed)
+    out = []
+    for sysn, d in train.groupby("coding_system"):
+        cs = load_system(sysn)
+        descs = cs.desc.assign(t=cs.desc.description.map(clean_desc)).groupby("code")["t"].apply(list)
+        for e, code in zip(d["entity"], d["code"]):
+            if code not in descs.index:
+                continue
+            pos = list(dict.fromkeys(descs[code]))[:3]
+            vs = variants(e)
+            for j, nc in enumerate(hard_multi.get((sysn, e), [])):
+                if nc not in descs.index:
+                    continue
+                a = vs[0] if rng.random() < 0.6 or len(vs) == 1 else rng.choice(vs[1:])
+                out.append((a, pos[j % len(pos)], descs[nc][0]))
+    rng.shuffle(out)
+    return out

@@ -1,0 +1,42 @@
+{
+ "base2": {
+  "ICD10CM": {
+   "dense_top1_in_top50": 0.4114,
+   "knn1": 0.5295
+  },
+  "SNOMEDCT_US": {
+   "dense_top1_in_top50": 0.4106,
+   "knn1": 0.3015
+  }
+ },
+ "iter2": {
+  "ICD10CM": {
+   "dense_top1_in_top50": 0.4683,
+   "knn1": 0.5164
+  },
+  "SNOMEDCT_US": {
+   "dense_top1_in_top50": 0.4607,
+   "knn1": 0.3008
+  }
+ },
+ "ep4": {
+  "ICD10CM": {
+   "dense_top1_in_top50": 0.4092,
+   "knn1": 0.5339
+  },
+  "SNOMEDCT_US": {
+   "dense_top1_in_top50": 0.4112,
+   "knn1": 0.2981
+  }
+ },
+ "iter3": {
+  "ICD10CM": {
+   "dense_top1_in_top50": 0.4683,
+   "knn1": 0.5142
+  },
+  "SNOMEDCT_US": {
+   "dense_top1_in_top50": 0.4621,
+   "knn1": 0.3022
+  }
+ }
+}

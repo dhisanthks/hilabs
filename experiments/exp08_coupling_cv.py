@@ -24,6 +24,7 @@ def name_embeddings(cs, tag='sapbert'):
 
 
 run = sys.argv[1]
+use_sim = '--no-sim' not in sys.argv
 df = load_train(); df['fold'] = assign_folds(df)
 X = {}
 for s in SYSTEMS:
@@ -37,7 +38,7 @@ for s in SYSTEMS:
     top = cand.sort_values(['qid', 'prob'], ascending=[True, False]).groupby('qid').head(5)
     X[s] = dict(d=d, cand=cand, top=top[['mention_id', 'code_idx', 'prob', 'fold']], cs=load_system(s), m1=m)
 
-emb = {s: name_embeddings(X[s]['cs']) for s in SYSTEMS}
+emb = {s: (name_embeddings(X[s]['cs']) if use_sim else None) for s in SYSTEMS}
 pairs_all = df.pivot_table(index=['mention_id'], columns='coding_system', values='code', aggfunc='first').dropna()
 pairs_all['fold'] = df.groupby('mention_id').fold.first().reindex(pairs_all.index)
 pairs_all = pairs_all.reset_index()
@@ -59,5 +60,5 @@ for s in SYSTEMS:
     summary[s] = dict(stage1=X[s]['m1'], stage2=m)
     pred.to_parquet(os.path.join(CACHE, f'pred_{run}+cp_{s}.parquet'))
     c.to_parquet(os.path.join(CACHE, f'oof_{run}+cp_{s}.parquet'))
-json.dump(summary, open(f'results/exp08_{run}.json', 'w'), indent=1)
+json.dump(summary, open(f'results/exp08_{run}{"" if use_sim else "_nosim"}.json', 'w'), indent=1)
 print(summary)

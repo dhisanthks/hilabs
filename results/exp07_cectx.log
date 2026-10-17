@@ -1,0 +1,112 @@
+04:57:14 ICD10CM first stage {'acc': 0.6687, 'recall': 0.9575, 'acc_seen': 0.7393, 'acc_unseen': 0.4426, 'acc_given_in_pool': 0.6984}
+05:03:04 SNOMEDCT_US first stage {'acc': 0.5068, 'recall': 0.9248, 'acc_seen': 0.6142, 'acc_unseen': 0.3783, 'acc_given_in_pool': 0.548}
+05:03:11 fold 0: 7711 training groups
+W1017 05:03:22.477000 30676 .venv\Lib\site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  29%|██▉       | 58/199 [00:00<00:00, 568.68it/s]Loading weights:  59%|█████▉    | 118/199 [00:00<00:00, 577.88it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 789.73it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.weight | MISSING | 
+classifier.bias   | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  ce step 200/1286 loss 2.172
+  ce step 400/1286 loss 2.001
+  ce step 600/1286 loss 2.417
+  ce step 800/1286 loss 2.309
+  ce step 1000/1286 loss 1.895
+  ce step 1200/1286 loss 1.383
+05:34:45 fold 1: 7692 training groups
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  17%|█▋        | 33/199 [00:00<00:00, 293.60it/s]Loading weights:  32%|███▏      | 63/199 [00:00<00:00, 242.73it/s]Loading weights:  44%|████▍     | 88/199 [00:00<00:00, 234.96it/s]Loading weights:  56%|█████▋    | 112/199 [00:00<00:00, 212.59it/s]Loading weights:  67%|██████▋   | 134/199 [00:00<00:00, 192.42it/s]Loading weights:  77%|███████▋  | 154/199 [00:00<00:00, 179.26it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 259.07it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.weight | MISSING | 
+classifier.bias   | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  ce step 200/1282 loss 2.231
+  ce step 400/1282 loss 1.426
+  ce step 600/1282 loss 2.100
+  ce step 800/1282 loss 1.730
+  ce step 1000/1282 loss 1.968
+  ce step 1200/1282 loss 1.454
+06:17:56 fold 2: 7791 training groups
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  23%|██▎       | 45/199 [00:00<00:00, 447.47it/s]Loading weights:  45%|████▌     | 90/199 [00:00<00:00, 358.80it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 646.59it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.weight | MISSING | 
+classifier.bias   | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  ce step 200/1299 loss 2.245
+  ce step 400/1299 loss 1.982
+  ce step 600/1299 loss 1.175
+  ce step 800/1299 loss 1.882
+  ce step 1000/1299 loss 1.470
+  ce step 1200/1299 loss 1.145
+06:47:00 fold 3: 7700 training groups
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  36%|███▌      | 72/199 [00:00<00:00, 714.66it/s]Loading weights:  72%|███████▏  | 144/199 [00:00<00:00, 611.53it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 756.14it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.weight | MISSING | 
+classifier.bias   | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  ce step 200/1284 loss 1.773
+  ce step 400/1284 loss 1.277
+  ce step 600/1284 loss 1.916
+  ce step 800/1284 loss 1.960
+  ce step 1000/1284 loss 1.907
+  ce step 1200/1284 loss 1.493
+07:19:13 fold 4: 7682 training groups
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  16%|█▌        | 31/199 [00:00<00:00, 299.16it/s]Loading weights:  37%|███▋      | 73/199 [00:00<00:00, 355.66it/s]Loading weights:  55%|█████▍    | 109/199 [00:00<00:00, 328.89it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 543.86it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.weight | MISSING | 
+classifier.bias   | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  ce step 200/1281 loss 2.311
+  ce step 400/1281 loss 1.869
+  ce step 600/1281 loss 2.076
+  ce step 800/1281 loss 1.225
+  ce step 1000/1281 loss 1.852
+  ce step 1200/1281 loss 0.904
+07:48:41 ICD10CM with cross-encoder {'acc': 0.6752, 'recall': 0.9575, 'acc_seen': 0.741, 'acc_unseen': 0.4645, 'acc_given_in_pool': 0.7052}
+07:48:41 ICD10CM cross-encoder alone acc 0.4055
+r1                    179360.0
+ce_rank                31306.0
+ce_gap                 25393.0
+dense_ft_sim_gap        5081.0
+ce                      4955.0
+char_sim_gap            2660.0
+knn_ft_rank             2422.0
+dense_ft_sim            2024.0
+knn_ft_max              1963.0
+knn_base_rank           1945.0
+char_sim                1877.0
+dense_base_sim_gap      1817.0
+07:52:43 SNOMEDCT_US with cross-encoder {'acc': 0.5161, 'recall': 0.9248, 'acc_seen': 0.6164, 'acc_unseen': 0.396, 'acc_given_in_pool': 0.558}
+07:52:44 SNOMEDCT_US cross-encoder alone acc 0.4001
+r1                    517279.0
+ce_gap                276964.0
+dense_ft_sim_gap       16720.0
+ce                     15284.0
+ce_rank                 9579.0
+dense_base_sim_gap      7312.0
+char_sim_gap            7002.0
+c_tag                   6135.0
+dense_ft_rank           4910.0
+dense_ft_sim            4874.0
+p_grp_sub               4580.0
+char_sim                4376.0
+{'ICD10CM': {'acc': 0.6752, 'recall': 0.9575, 'acc_seen': 0.741, 'acc_unseen': 0.4645, 'acc_given_in_pool': 0.7052}, 'SNOMEDCT_US': {'acc': 0.5161, 'recall': 0.9248, 'acc_seen': 0.6164, 'acc_unseen': 0.396, 'acc_given_in_pool': 0.558}}

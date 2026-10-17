@@ -1,0 +1,35 @@
+09:01:33 ICD10CM stage-1 {'acc': 0.6752, 'recall': 0.9575, 'acc_seen': 0.741, 'acc_unseen': 0.4645, 'acc_given_in_pool': 0.7052}
+09:05:44 SNOMEDCT_US stage-1 {'acc': 0.5161, 'recall': 0.9248, 'acc_seen': 0.6164, 'acc_unseen': 0.396, 'acc_given_in_pool': 0.558}
+09:07:54 ICD10CM stage-2 coupled {'acc': 0.6774, 'recall': 0.9575, 'acc_seen': 0.7462, 'acc_unseen': 0.4572, 'acc_given_in_pool': 0.7074} mentions with other-system rows: 0.921
+r1                    192250.0
+ce_rank                34657.0
+ce_gap                 10501.0
+dense_ft_sim_gap        5101.0
+ce                      3934.0
+char_sim_gap            2459.0
+cp_cooc_w               2432.0
+knn_ft_rank             2374.0
+cp_sim                  2367.0
+dense_base_sim_gap      1702.0
+fz_ratio                1695.0
+dense_ft_rank           1681.0
+char_sim                1580.0
+dense_ft_sim            1545.0
+cp_sim_w                1524.0
+09:14:35 SNOMEDCT_US stage-2 coupled {'acc': 0.5178, 'recall': 0.9248, 'acc_seen': 0.6169, 'acc_unseen': 0.3993, 'acc_given_in_pool': 0.56} mentions with other-system rows: 0.289
+r1                    535435.0
+ce_gap                248768.0
+ce                     29349.0
+ce_rank                13016.0
+dense_ft_sim_gap       12207.0
+char_sim_gap            6645.0
+dense_base_sim_gap      6500.0
+c_tag                   5758.0
+dense_ft_rank           4834.0
+p_grp_sub               4678.0
+fz_tsort                4474.0
+dense_ft_sim            4393.0
+fz_ratio                4283.0
+char_sim                4075.0
+dense_base_sim          4014.0
+{'ICD10CM': {'stage1': {'acc': 0.6752, 'recall': 0.9575, 'acc_seen': 0.741, 'acc_unseen': 0.4645, 'acc_given_in_pool': 0.7052}, 'stage2': {'acc': 0.6774, 'recall': 0.9575, 'acc_seen': 0.7462, 'acc_unseen': 0.4572, 'acc_given_in_pool': 0.7074}}, 'SNOMEDCT_US': {'stage1': {'acc': 0.5161, 'recall': 0.9248, 'acc_seen': 0.6164, 'acc_unseen': 0.396, 'acc_given_in_pool': 0.558}, 'stage2': {'acc': 0.5178, 'recall': 0.9248, 'acc_seen': 0.6169, 'acc_unseen': 0.3993, 'acc_given_in_pool': 0.56}}}

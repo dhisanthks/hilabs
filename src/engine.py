@@ -14,7 +14,7 @@ import torch
 
 from .candidates import char_knn_features, dense_candidates, knn_features, lexical_candidates, merge
 from .dicts import CACHE, load_system
-from .features import CodeText, dense_fill, fuzzy_features, query_flags
+from .features import CodeText, dense_fill, fuzzy_features, query_flags, specificity_features
 from .lexical import LexicalIndex
 from .normalize import clean, clean_desc
 from .query import variants
@@ -156,7 +156,7 @@ class Engine:
 
         # ---- string similarity
         fz = fuzzy_features(cand, var_lists, self.ct)
-        cand = pd.concat([cand.reset_index(drop=True), fz], axis=1)
+        cand = pd.concat([cand.reset_index(drop=True), fz, specificity_features(cand, var_lists, self.ct)], axis=1)
         # ---- query flags
         qf = query_flags([vs[-1] + " | " + vs[0] for vs in var_lists])
         base_tok = np.array([len(vs[0].split()) for vs in var_lists])

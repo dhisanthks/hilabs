@@ -150,3 +150,180 @@ Examples: `acute hypoxic and hypercapnic respiratory failure`→J96.21 vs `acute
 empirical proxy for inter-annotator agreement and bounds achievable exact-match accuracy.
 Also: ICD specificity errors are balanced (46 over-specific vs 60 under-specific out of 239 same-category errors) → no
 systematic bias to correct by rule.
+
+## Exp05 — Fine-tuned SapBERT (per fold) — early read, ICD fold 0 only
+Fine-tune: MultipleNegativesRanking loss + 1 mined hard negative (lexically closest wrong code), 2 epochs, lr 2e-5,
+batch 64, shared model for ICD+SNOMED, trained only on the 4 training folds. Base SapBERT features kept alongside.
+| ICD fold 0 | base SapBERT | fine-tuned SapBERT |
+|---|---|---|
+| dense dictionary retrieval top-1 | 34.6% | **41.6%** |
+| kNN over training terms top-1 | 49.9% | **53.0%** |
+| candidate recall (pool ≈250/row) | 93.7% | **96.1%** |
+Full 5-fold reranked result pending (folds 1–4 queued; ~25–30 min per fold, dominated by re-encoding 984k SNOMED descriptions).
+
+## Exp05 — fold 0 complete (both systems)
+- SNOMED fold 0: candidates ≈475/row (tag-stratified), **candidate recall 92.2%** (lexical-only 82.7%).
+  Dense top-1: base 40.8% → fine-tuned 42.1% (smaller fine-tune gain than ICD's 34.6 → 41.6).
+- Fine-tune cost: 454 steps, 238 s on RTX 3050; re-encoding 984k SNOMED descriptions ≈13 min/fold (the bottleneck).
+- Quick inner-CV on fold 0 only (ranker sees ~1/3 of usual data → conservative), same protocol for all tables:
+| fold 0 | ICD | SNOMED |
+|---|---|---|
+| lexical + reranker | 56.5% | 41.7% |
+| + base SapBERT | 63.0% | — |
+| + fine-tuned SapBERT + tag-stratified retrieval | **66.3%** | **50.2%** |
+
+## Subconcept robustness check
+The brief's eval schema (`chunk_id, clinical_entity`) may not include `subconcept`. Ranker retrained without
+`p_grp_sub`/`subconcept` features: ICD 63.1% → 64.0% (no dependence; all ICD rows are DiagnosisCode),
+SNOMED 43.9% → 42.9% (−1.0). → Engine trains both variants and picks by the input's columns.
+
+## Priority note
+Headline metric = min(ICD, SNOMED) → SNOMED is the bottleneck; next steps are ordered by expected SNOMED gain:
+cross-encoder (ranking errors dominate), ICD↔SNOMED coupling, second encoder (gte had best SNOMED recall).
+
+## SNOMED error anatomy (fine-tuned, fold 0, 735 errors / 1,476)
+Gold rank among errors: 2nd 168, 3rd 79, 4–5th 79, 6–10th 80, 11–100th 176, >100 38, not retrieved 115 (7.8%).
+→ ~1/3 of errors are near-misses between near-synonyms (`acute resp failure`: gold *Acute respiratory failure*,
+picked *Acute hypoxemic respiratory failure*) → target for a cross-encoder + specificity features.
+By subconcept: Diagnosis 62.4%, Encounter 54.5%, Lab 48.1%, Device 43.8%, Procedure 39.9%.
+Context-dependent / noisy labels exist (`exercise regularly` → gold *Gets no exercise*).
+
+## Specificity-calibration features — `features.specificity_features`
+sp_extra_n/frac = candidate content words not in any query variant (over-specific);
+sp_miss_n/frac = query content words not in the description (under-specific); min over the code's descriptions.
+Fold-0 inner CV: ICD 66.3 → 66.3, SNOMED 50.2 → 50.6 (neutral/slightly positive) → kept for interpretability.
+
+## Exp05 — RESULT: fine-tuned SapBERT, full 5-fold CV (`results/exp05_ftsap.json`)
+| 5-fold CV | ICD10CM | SNOMEDCT_US |
+|---|---|---|
+| lexical + reranker (Exp04a/b) | 55.9% | 43.9% |
+| + base SapBERT (Exp04c) | 63.1% | — |
+| **+ fine-tuned SapBERT (per fold) + base SapBERT + tag-stratified SNOMED retrieval** | **66.7%** | **51.1%** |
+| candidate recall | 95.8% | 92.5% |
+| acc on seen / unseen codes | 74.5 / 41.7% | 61.4 / 38.8% |
+| acc given gold in pool | 69.7% | 55.2% |
+Top features now: dense_ft_sim_gap, dense_ft_rank, knn_ft_rank (fine-tuned encoder dominates).
+Long tail improved strongly (SNOMED unseen 29.8 → 38.8%). Per-fold cost ≈25–30 min (SNOMED re-encode dominates).
+
+## Exp08a — ICD↔SNOMED coupling, co-occurrence features only (`results/exp08_ftsap_nosim.json`)
+Stage-2 reranker with cp_cooc / cp_cooc_w / cp_has from the other system's OOF top-5 (fold-aware pair counts).
+ICD 66.9 → **67.4%** (+0.5); SNOMED 50.7 → **51.2%** (+0.5).
+Coverage explains the small gain: 92% of ICD mentions have a SNOMED sibling, only 29% of SNOMED mentions have an
+ICD sibling (most SNOMED rows are labs/procedures/devices). Name-similarity variant (cp_sim) pending GPU.
+
+## Exp07 — cross-encoder (in progress)
+First attempt (15 negatives, 128 tokens, term+context): ~53 min/fold → too slow for the budget; restarted with
+9 negatives, 96 tokens, 6 groups/batch → ~22 min/fold. Joint ICD+SNOMED model per fold, listwise CE loss.
+
+## Error analysis #2 — fine-tuned model, full OOF (`experiments/error_analysis.py ftsap` → `results/error_analysis_ftsap.md`)
+**ICD10CM 66.7%** — partial credit: 3-char category 77.7%, chapter 87.0%.
+Errors: retrieval miss 12.8% | specificity (right category) 31.5% | right chapter wrong category 25.0% | wrong chapter 30.7%.
+Slices: seen 74.5% / unseen 41.7%; abbreviation 77.0% (expansion works); OCR/noise 71.8%; history 35.7% (n=14).
+**SNOMEDCT_US 51.1%** — semantic-tag accuracy 72.4%.
+Errors: retrieval miss 15.4% | wrong semantic tag 45.4% | same tag, wrong concept 39.2%.
+Slices: seen 61.4% / unseen 38.8%; OCR/noise 43.6%; negation 41.2%; ≥6 tokens 43.6%; laterality 58.9%.
+**Calibration is good → abstention works** (ICD): conf>0.9 → 92.9% correct (39% of terms); conf 0.8–0.9 → 81.4%;
+conf<0.2 → 13.5%. Coverage/accuracy: 100%→66.7, 90%→71.9, 80%→77.5, 70%→82.3, **50%→90.6**, 30%→94.4.
+→ Next: concept-type classifier (Exp09) targets the 45% wrong-tag SNOMED errors and 31% wrong-chapter ICD errors.
+
+## Exp07 — cross-encoder, fold-0 read
+Cross-encoder alone (rerank top-30): ICD 42.2%, SNOMED 40.7% (weak standalone; gold in top-30: 93.2% / 85.5%).
+As a **feature in LightGBM** (fold-0 inner CV): ICD 66.3 → **69.8%** (+3.5), SNOMED 50.6 → **52.0%** (+1.4).
+→ Complementary signal; kept. Remaining folds running.
+
+## Exp09 — concept-type classifier (negative result)
+Logistic regression on SapBERT embedding + char n-grams (+ subconcept) predicting ICD chapter / SNOMED semantic tag.
+OOF type accuracy: ICD chapter 80.2% (majority 29.9%), SNOMED tag 66.7% (majority 25.5%) — but the SNOMED tag
+accuracy is *below* the reranker's own 72.4%, and adding p_type to the ICD reranker gave 66.9 → 66.7%.
+→ The reranker already captures type information; dropped.
+
+## Research — see `docs/RESEARCH.md`
+xMEN (char TF-IDF + SapBERT + trained cross-encoder) ≈ our architecture; DrivenData SNOMED challenge winner relied on
+training-annotation dictionaries + section context; n2c2 2019 top = 85.3% with a 5-model BERT ensemble; MedCAT uses
+concept context embeddings → implemented as context-kNN features (Exp10, running).
+
+## Exp10 — context-kNN (MedCAT idea), ICD
+Features: cosine of the mention's surrounding chunk text (entity removed) / entity+context to training mentions of each
+candidate code (max, mean, gap), fold-aware. ICD: 66.9 → 66.7% (no gain; features get importance but are redundant).
+SNOMED run deferred (RAM: 3.5M-row table + cross-encoder process exceeded 15 GB).
+**Pattern so far:** extra hand-crafted features (type classifier, context-kNN, bigger ranker) → ~0; new *models*
+(fine-tuned encoder +3.6/+7.2, cross-encoder +3.5/+1.4 on fold 0) → real gains. Remaining GPU time goes to models.
+
+## Exp06b — reranker capacity on SNOMED (fine-tuned table)
+default (31 leaves, lr .05, 600) 50.7% | 63 leaves 50.6% | 127 leaves lr .03 900 rounds 50.7% | 63 leaves trunc30 lr .03 1000 50.7%.
+→ No gain; LightGBM defaults kept. (Same conclusion as ICD Exp06: ±1 point, noise level.)
+
+## Exp07 — RESULT: cross-encoder stacked, full 5-fold CV (`results/exp07_ftsap_cectx.json`)
+Cross-encoder (SapBERT init, listwise, 1 epoch, 9 hard negatives, query = term + ±120-char chunk context, 96 tokens),
+scores R1's top-30; features ce / ce_rank / ce_gap + r1 into R2.
+| | ICD | SNOMED |
+|---|---|---|
+| R1 (fine-tuned stack) | 66.9% | 50.7% |
+| **R2 (+cross-encoder)** | **67.5%** | **51.6%** |
+| cross-encoder alone (top-30) | 40.6% | 40.0% |
+| unseen-code accuracy R1 → R2 | 44.3 → 46.5% | 37.8 → 39.6% |
+Lesson: the fold-0 inner-CV estimate (+3.5/+1.4) overstated the gain — that protocol trains the ranker on 1/3 of a fold;
+only full 5-fold numbers are reported as results from here on. CE training: ~22–30 min/fold on RTX 3050.
+
+## Exp08b — coupling with name similarity, on top of the cross-encoder (ICD)
+cp_sim / cp_sim_w (SapBERT similarity between candidate name and the other system's top-5 names) + co-occurrence:
+ICD R2 67.5 → **67.7%**. SNOMED run crashed (RAM, concurrent LLM job) → rerun pending.
+
+## Exp11 — local LLM adjudicator (Qwen3-4B-Instruct-2507, 4-bit bnb, Apache-2.0), prototype
+Prompt: term + chunk context + 5 retrieved *training* examples (fold-aware few-shot of coder conventions) + R2 top-10
+lettered candidates; next-token letter log-probs (deterministic, one forward pass).
+300 random terms/system: LLM alone ICD 58.7% vs R2 65.7%; SNOMED 41.3% vs R2 51.7%; gold in top-10 87.3% / 83.0%.
+→ A 4B local model is clearly weaker than the trained reranker as a decision-maker.
+Speed: 0.34 s/term in isolation (batch 4, 3.3 GB peak VRAM, ~340-token prompt); the prototype's 4.6 s/term was caused by
+RAM swapping from a concurrent job. Complementarity check (does it fix R2's errors?) running.
+Complementarity (400 terms/system, run alone): LLM fixes 35% of R2's errors whose gold is in the top-10
+(ICD: fixes 7.2% of terms, breaks 15.5%; SNOMED: fixes 11.2%, breaks 23.0%).
+CV-tuned blend log p_R2 + w·log p_LLM: ICD 67.75 → 68.0%, SNOMED 50.5 → 50.5% (w≈0.1).
+**Decision:** LLM not in the main pipeline — gain within noise, costs ~2 h OOF + 0.3–0.7 s/term at inference.
+Documented as a tested cascade stage (the brief's "LLM adjudication on low-confidence cases").
+
+## Exp08b — RESULT: full stack R3 = fine-tuned retrieval + cross-encoder + coupling (co-occurrence + name similarity)
+| 5-fold CV | ICD | SNOMED |
+|---|---|---|
+| R2 (+cross-encoder) | 67.5% | 51.6% |
+| **R3 (+coupling)** | **67.7%** | **51.8%** |
+| seen / unseen codes | 74.6 / 45.7% | 61.7 / 39.9% |
+
+### Progress summary so far (exact match, 5-fold CV)
+| Stage | ICD | SNOMED |
+|---|---|---|
+| char TF-IDF + kNN baseline | 41.2 | 32.8 |
+| + normalization + LightGBM reranker over lexical retrievers | 55.9 | 43.9 |
+| + SapBERT dense retrieval / kNN | 63.1 | — |
+| + per-fold fine-tuned SapBERT + tag-stratified SNOMED retrieval | 66.7 | 51.1 |
+| + specificity features | 66.9 | 50.7 |
+| + cross-encoder (term + context) | 67.5 | 51.6 |
+| + ICD↔SNOMED coupling | **67.7** | **51.8** |
+
+## Exp12 — bi-encoder fine-tuning variants (proxy: fold 0, encoder alone re-ranking R1 top-50; kNN@1)
+| variant | ICD dense top-1 | ICD kNN@1 | SNOMED dense top-1 | SNOMED kNN@1 |
+|---|---|---|---|---|
+| base2: 2 epochs, 1 lexical hard negative (current) | 41.1 | 53.0 | 41.1 | 30.2 |
+| ep4: 4 epochs | 40.9 | 53.4 | 41.1 | 29.8 |
+| **iter2: iterative hard negatives (top-3 wrong codes by round-1 model's OOF score), 2 epochs** | **46.8** | 51.6 | **46.1** | 30.1 |
+| iter3: iterative, 3 epochs | 46.8 | 51.4 | 46.2 | 30.2 |
+→ Harder negatives, not longer training, improve the encoder (+5–6 points top-1). kNN unaffected.
+Note: round-1 OOF scores used only to *select negatives* (wrong codes) for round-2; label leakage negligible.
+→ Rebuilding all 5 folds with the round-2 recipe (`ftsap2`, `--iter-from ftsap`); cross-encoder scores reused
+(they depend only on term/candidate text).
+
+## Exp05b — round-2 fine-tuning (iterative hard negatives), partial read on folds 0–2 (ICD, 3-fold CV)
+| ICD folds 0–2 | R1 acc | candidate recall |
+|---|---|---|
+| round-1 encoder (lexical negatives) | 66.9% | 95.9% |
+| round-2 encoder (iterative negatives) | 65.7% | 96.1% |
+| **round-1 table + round-2 encoder features** | **68.3%** | — |
+| round-2 table + round-1 encoder features | 68.35% | — |
+Round-2 is better at dictionary matching but slightly worse at term↔term kNN (proxy kNN@1 53.0 → 51.6), the ranker's
+strongest signal → alone it loses; **together the two encoders are complementary (+1.4)** — an ensemble, as the
+n2c2 2019 winner found. Final engine carries both fine-tuned encoders (+ base SapBERT).
+Ops: fold 3 crashed (3.8 GB dense score matrix in lexical top-k at batch 512) → batch 64.
+Ops: disk down to 6.7 GB → removed benchmark-only models from the HF cache (BioLORD, gte, BGE, e5, MedEmbed, MedCPT,
+Qwen3-4B; 5.1 GB, re-downloadable) and superseded experiment tables → 12 GB free.
+Pipeline updated: final engine = round-2 fine-tuned SapBERT (`models/biencoder`) + round-1 fine-tuned SapBERT
+(`models/biencoder_r1`, features *_ft1_*) + base SapBERT, cross-encoder, R1/R2/R3 LightGBM.

@@ -60,7 +60,7 @@ class LexicalIndex:
             Q.data[:] = 1.0
         return Q
 
-    def search(self, queries, k=100, bs=512):
+    def search(self, queries, k=100, bs=64):
         """Returns (desc_idx [n,k], score [n,k])."""
         I, S = [], []
         for s in range(0, len(queries), bs):

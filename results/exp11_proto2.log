@@ -1,0 +1,11 @@
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+W1017 08:49:14.046000 13164 .venv\Lib\site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+W1017 08:49:14.485000 13164 .venv\Lib\site-packages\torch\utils\flop_counter.py:29] triton not found; flop counting will not work for triton kernels
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:   9%|▊         | 34/398 [00:00<00:01, 319.55it/s]Loading weights:  17%|█▋        | 67/398 [00:00<00:01, 313.33it/s]Loading weights:  25%|██▌       | 100/398 [00:00<00:00, 311.36it/s]Loading weights:  33%|███▎      | 132/398 [00:00<00:00, 314.60it/s]Loading weights:  41%|████▏     | 165/398 [00:00<00:00, 312.92it/s]Loading weights:  50%|████▉     | 198/398 [00:00<00:00, 312.31it/s]Loading weights:  58%|█████▊    | 231/398 [00:00<00:00, 314.21it/s]Loading weights:  67%|██████▋   | 265/398 [00:00<00:00, 313.10it/s]Loading weights:  75%|███████▍  | 298/398 [00:00<00:00, 311.90it/s]Loading weights:  83%|████████▎ | 330/398 [00:01<00:00, 309.91it/s]Loading weights:  92%|█████████▏| 366/398 [00:01<00:00, 311.42it/s]Loading weights: 100%|██████████| 398/398 [00:01<00:00, 317.39it/s]
+08:50:07 ICD10CM R2 {'acc': 0.6752, 'recall': 0.9575, 'acc_seen': 0.741, 'acc_unseen': 0.4645, 'acc_given_in_pool': 0.7052}
+08:53:06 ICD10CM LLM scored 400 terms in 178s (0.45s/term)
+08:53:07 ICD10CM {'n': 400, 'llm_alone': 0.595, 'r2': 0.6775, 'oracle_topk': 0.8825}
+08:57:26 SNOMEDCT_US R2 {'acc': 0.5161, 'recall': 0.9248, 'acc_seen': 0.6164, 'acc_unseen': 0.396, 'acc_given_in_pool': 0.558}
+08:59:41 SNOMEDCT_US LLM scored 400 terms in 132s (0.33s/term)
+08:59:42 SNOMEDCT_US {'n': 400, 'llm_alone': 0.3875, 'r2': 0.505, 'oracle_topk': 0.82}
+{'ICD10CM': {'n': 400, 'llm_alone': 0.595, 'r2': 0.6775, 'oracle_topk': 0.8825}, 'SNOMEDCT_US': {'n': 400, 'llm_alone': 0.3875, 'r2': 0.505, 'oracle_topk': 0.82}}

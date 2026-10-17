@@ -17,7 +17,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument('cand_run'); ap.add_argument('ce_run')
 ap.add_argument('--query', default='plain'); ap.add_argument('--epochs', type=int, default=1)
 ap.add_argument('--topk', type=int, default=30); ap.add_argument('--neg', type=int, default=15)
-ap.add_argument('--base', default='sapbert'); ap.add_argument('--systems', default=','.join(SYSTEMS))
+ap.add_argument('--base', default='sapbert'); ap.add_argument('--max-len', type=int, default=64); ap.add_argument('--gpb', type=int, default=4); ap.add_argument('--systems', default=','.join(SYSTEMS))
 a = ap.parse_args()
 systems = a.systems.split(',')
 
@@ -54,7 +54,7 @@ for f in range(N_FOLDS):
                 continue
             groups.append((X['q'][qi], [cand_text(X['cs'], X['gold'][qi])] + [cand_text(X['cs'], k) for k in ng]))
     log(f'fold {f}: {len(groups)} training groups')
-    ce = CrossEncoder(a.base).fit(groups, epochs=a.epochs, group_size=a.neg + 1)
+    ce = CrossEncoder(a.base, max_len=a.max_len).fit(groups, epochs=a.epochs, group_size=a.neg + 1, groups_per_batch=a.gpb)
     for s in systems:
         X = S[s]; c = X['cand']
         te = c[(c.fold == f) & (c.r1 < a.topk)]

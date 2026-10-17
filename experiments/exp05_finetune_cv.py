@@ -10,7 +10,7 @@ from src.dicts import load_train, SYSTEMS, CACHE
 from src.cv import assign_folds, N_FOLDS
 from src.engine import Engine, log
 from src.encoders import Encoder
-from src.finetune import build_pairs, finetune, mine_hard_negatives
+from src.finetune import build_pairs, build_pairs_multi, finetune, iterative_hard_negatives, mine_hard_negatives
 from src.evaluate import cv_rerank
 
 ap = argparse.ArgumentParser()
@@ -18,6 +18,7 @@ ap.add_argument('run'); ap.add_argument('base')
 ap.add_argument('--with-base', action='store_true')
 ap.add_argument('--epochs', type=int, default=2)
 ap.add_argument('--folds', default='0,1,2,3,4')
+ap.add_argument('--iter-from', default=None, help='round-1 OOF run name for iterative hard negatives')
 a = ap.parse_args()
 
 df = load_train(); df['fold'] = assign_folds(df)
@@ -28,6 +29,13 @@ for s in SYSTEMS:
     if os.path.exists(p):
         hard.update(mine_hard_negatives(pd.read_parquet(p), per_sys[s], s))
 log('hard negatives', len(hard))
+hard_multi = None
+if a.iter_from:
+    oofs = {s: pd.concat([pd.read_parquet(os.path.join(CACHE, f'oofpart_{a.iter_from}_{s}_f{f}.parquet'),
+                                          columns=['qid', 'code_idx', 'label', 'dense_ft_sim']) for f in range(N_FOLDS)])
+            for s in SYSTEMS}
+    hard_multi = iterative_hard_negatives(oofs, per_sys, k=3)
+    log('iterative hard negatives for', len(hard_multi), 'terms')
 
 base_enc = Encoder(a.base) if a.with_base else None
 for f in [int(x) for x in a.folds.split(',')]:
@@ -35,7 +43,7 @@ for f in [int(x) for x in a.folds.split(',')]:
     if all(os.path.exists(p) for p in outp.values()):
         continue
     tr = df[df.fold != f]
-    pairs = build_pairs(tr, hard)
+    pairs = build_pairs_multi(tr, hard_multi) if hard_multi else build_pairs(tr, hard)
     log(f'fold {f}: {len(pairs)} pairs; fine-tuning {a.base}')
     st = finetune(a.base, pairs, epochs=a.epochs)
     encs = {'ft': Encoder.from_model(st)}

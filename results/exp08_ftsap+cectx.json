@@ -1,0 +1,34 @@
+{
+ "ICD10CM": {
+  "stage1": {
+   "acc": 0.6752,
+   "recall": 0.9575,
+   "acc_seen": 0.741,
+   "acc_unseen": 0.4645,
+   "acc_given_in_pool": 0.7052
+  },
+  "stage2": {
+   "acc": 0.6774,
+   "recall": 0.9575,
+   "acc_seen": 0.7462,
+   "acc_unseen": 0.4572,
+   "acc_given_in_pool": 0.7074
+  }
+ },
+ "SNOMEDCT_US": {
+  "stage1": {
+   "acc": 0.5161,
+   "recall": 0.9248,
+   "acc_seen": 0.6164,
+   "acc_unseen": 0.396,
+   "acc_given_in_pool": 0.558
+  },
+  "stage2": {
+   "acc": 0.5178,
+   "recall": 0.9248,
+   "acc_seen": 0.6169,
+   "acc_unseen": 0.3993,
+   "acc_given_in_pool": 0.56
+  }
+ }
+}

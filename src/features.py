@@ -111,3 +111,39 @@ def dense_fill(cand, Qv, owner_rows, Dt: torch.Tensor, ct: CodeText, name="dense
         sims = (q.float() * d.float()).sum(1)
         out.scatter_reduce_(0, torch.from_numpy(pi[s:s + bs]).to(dev), sims, reduce="amax")
     return out.cpu().numpy()
+
+
+_STOP = {"of", "the", "and", "or", "with", "in", "on", "to", "a", "an", "by", "for", "at", "as", "nos", "due",
+         "unspecified", "other", "finding", "disorder", "procedure"}
+
+
+def specificity_features(cand: pd.DataFrame, var_lists, ct: CodeText) -> pd.DataFrame:
+    """Specificity calibration signals between the query and the candidate's closest description:
+    sp_extra_n / sp_extra_frac – candidate content words absent from every query variant (over-specific)
+    sp_miss_n  / sp_miss_frac  – query content words absent from the description (under-specific)
+    Min over the code's descriptions (its most compatible wording)."""
+    rows = cand["row"].to_numpy(); codes = cand["code_idx"].to_numpy()
+    n = len(cand)
+    en = np.full(n, 99, np.float32); ef = np.ones(n, np.float32)
+    mn = np.full(n, 99, np.float32); mf = np.ones(n, np.float32)
+    qcache = {}
+    for i in range(n):
+        r = rows[i]
+        qt = qcache.get(r)
+        if qt is None:
+            qt = qcache[r] = (set(t for v in var_lists[r] for t in v.split()) - _STOP,
+                              set(var_lists[r][0].split()) - _STOP)
+        allq, baseq = qt
+        ds = ct.descs[codes[i]]
+        if not isinstance(ds, list):
+            continue
+        for d in ds:
+            dt = set(d.split()) - _STOP
+            if not dt:
+                continue
+            extra = len(dt - allq)
+            miss = len(baseq - dt) if baseq else 0
+            if extra < en[i] or (extra == en[i] and miss < mn[i]):
+                en[i] = extra; ef[i] = extra / len(dt)
+                mn[i] = miss; mf[i] = miss / max(len(baseq), 1)
+    return pd.DataFrame({"sp_extra_n": en, "sp_extra_frac": ef, "sp_miss_n": mn, "sp_miss_frac": mf})

@@ -1,0 +1,14 @@
+{
+ "ICD10CM": {
+  "n": 400,
+  "llm_alone": 0.595,
+  "r2": 0.6775,
+  "oracle_topk": 0.8825
+ },
+ "SNOMEDCT_US": {
+  "n": 400,
+  "llm_alone": 0.3875,
+  "r2": 0.505,
+  "oracle_topk": 0.82
+ }
+}
