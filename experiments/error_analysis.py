@@ -68,6 +68,23 @@ for s in SYSTEMS:
         modes['same semantic tag, wrong concept'] = (err.in_pool & ~wrong_tag).sum()
         r['tag_acc'] = float((d.pred.map(tag) == d.code.map(tag)).mean())
         md.append(f"Partial credit: semantic-tag accuracy **{pct(r['tag_acc'])}**.\n")
+    # tolerant metrics: how much of the gap is gold-standard ambiguity
+    from rapidfuzz import fuzz
+    from src.normalize import clean_desc
+    gi = d.code.map(cs.code_to_idx).fillna(0).astype(int).to_numpy()
+    gname = [clean_desc(str(x)) for x in cs.name_of[gi]]
+    pname = [clean_desc(str(x)) for x in d.pred_name]
+    sim = np.array([fuzz.token_set_ratio(a, b) for a, b in zip(pname, gname)])
+    same_name = np.array([a == b for a, b in zip(pname, gname)])
+    tol = {'exact match': float(acc),
+           'exact or same-name twin (identical preferred name)': float((d.ok | same_name).mean()),
+           'exact or near-synonym (name similarity >= 90)': float((d.ok | (sim >= 90)).mean())}
+    if s == 'ICD10CM':
+        tol['correct 3-character category'] = float((d.pred.str[:3] == d.code.str[:3]).mean())
+    r['tolerant'] = tol
+    md.append("\n**Tolerant metrics (how much of the gap is gold-standard ambiguity)**\n\n| metric | accuracy |\n|---|---|")
+    for k, v in tol.items():
+        md.append(f"| {k} | {pct(v)} |")
     md.append("\n**Failure modes (share of errors)**\n\n| mode | errors | share |\n|---|---|---|")
     for k, v in modes.items():
         md.append(f"| {k} | {v} | {pct(v / max(len(err), 1))} |")

@@ -53,12 +53,17 @@ is on terms the system never saw.
 | + per-fold fine-tuned SapBERT + tag-stratified retrieval | 66.7 | 51.1 |
 | + cross-encoder with chunk context | 67.5 | 51.6 |
 | + ICD↔SNOMED coupling | 67.7 | 51.8 |
-| + round-2 fine-tuning with iterative hard negatives | _TBD_ | _TBD_ |
+| + round-2 fine-tuning (iterative hard negatives) + ensemble with round-1 encoder (**final**) | **68.3** | **52.2** |
+| final, **diagnosis/condition terms only** (brief's scope) | 68.2 | **62.7** |
 
-Partial credit (ICD): correct 3-character category 77.7%, chapter 87.0%. SNOMED semantic-tag accuracy 72.4%.
-Long tail (codes unseen in training folds): ICD _..._, SNOMED _..._.
-**Abstention:** confidence is well calibrated (ICD terms with confidence > 0.9: 92.9% correct). Abstaining on the
-least-confident half gives **90.6% accuracy at 50% coverage** (ICD).
+Partial credit: ICD correct 3-character category **78.5%**, chapter 87.7%; SNOMED correct semantic tag 73.2%.
+Long tail (gold code unseen in the training folds — 24% of ICD, 46% of SNOMED terms): ICD **46.3%**, SNOMED **40.3%**
+(seen codes: 75.1% / 62.2%).
+**Abstention:** confidence is calibrated — confidence > 0.9 is right 91.9% (ICD, 48% of terms) and 96.2% (SNOMED).
+| coverage (abstain on lowest confidence) | 100% | 90% | 70% | 50% | 30% |
+|---|---|---|---|---|---|
+| ICD accuracy | 68.3 | 73.9 | 84.2 | 91.3 | 95.7 |
+| SNOMED accuracy | 52.2 | 56.9 | 66.3 | 77.2 | 87.7 |
 
 ## 4. Design decisions
 - **Retrieve-then-rerank with many cheap retrievers + one learned stacker.** Each retriever is good at a different
@@ -79,10 +84,19 @@ least-confident half gives **90.6% accuracy at 50% coverage** (ICD).
   (no chart data leaves the machine); runs on a 4 GB laptop GPU; ~_x_ ms/term at inference.
 
 ## 5. Error analysis (final model)
-_To be filled with final numbers — see results/error_analysis_final.md._
-Failure modes (fine-tuned model): ICD — retrieval miss 12.8%, specificity within category 31.5%, wrong category same
-chapter 25.0%, wrong chapter 30.7%. SNOMED — retrieval miss 15.4%, wrong semantic tag 45.4%, same tag wrong concept 39.2%.
-Hardest slices: SNOMED procedures (40%) and labs (48%) vs diagnoses (62%); OCR-noisy terms; negated mentions.
+| Failure mode (share of errors) | ICD (732 errors) | SNOMED (3,509 errors) |
+|---|---|---|
+| gold never retrieved (recall) | 13% | 15% |
+| right ICD category, wrong specificity | 31% | — |
+| right chapter, wrong category / same SNOMED tag, wrong concept | 25% | 40% |
+| wrong chapter / wrong SNOMED semantic tag | 31% | 45% |
+
+By slice: SNOMED diagnoses 62.7% vs procedures 44.3%, labs 47.7%, devices 45.8% (non-diagnosis SNOMED rows follow
+idiosyncratic conventions, e.g. `phosphorus` → *Phosphate measurement*, `roll supine` → *Positioning subject in supine
+position*); OCR-noisy terms 44.9% (SNOMED) vs 52.9%; negated 45.1%; long phrases (≥6 tokens) 43.8%; abbreviations are
+*easier* than average after expansion (ICD 78.1%). Many residual errors are near-synonym ties where the gold standard
+itself is inconsistent (label self-consistency 93.7% / 84.6%), e.g. `acute resp failure` gold *Acute respiratory failure*
+vs predicted *Acute hypoxemic respiratory failure*; J96.01 vs J96.21 for two spellings of the same phrase.
 
 ## 6. What we tried and abandoned
 | Idea | Result | Why dropped |

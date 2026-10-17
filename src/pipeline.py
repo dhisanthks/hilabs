@@ -17,6 +17,7 @@ import time
 
 import lightgbm as lgb
 import numpy as np
+from rapidfuzz import fuzz
 import pandas as pd
 import torch
 
@@ -274,6 +275,22 @@ def train(train_csv=None, epochs=2):
 
 
 # ============================================================================ inference
+def _display_names(train, cs):
+    """Human-readable display per code for the *output* only: the coders' display string when the code occurs in
+    training, else the dictionary description without index-style parenthetical lists."""
+    disp = train[train.coding_system == cs.name].groupby("code")["display"].agg(lambda x: x.value_counts().index[0])
+    desc = cs.desc[~cs.desc.description.str.contains(r"\) \(", regex=True)]
+    first = desc.assign(L=desc.description.str.len()).sort_values("L", ascending=False).groupby("code_idx")["description"].first()
+    names = pd.Series(cs.name_of, index=range(len(cs)))
+    names.update(first)
+    out = names.to_numpy().astype(object)
+    for code, dname in disp.items():
+        i = cs.code_to_idx.get(code)
+        if i is not None:
+            out[i] = dname
+    return out
+
+
 class Mapper:
     def __init__(self):
         from .encoders import Encoder
@@ -290,13 +307,15 @@ class Mapper:
 
     def engine(self, s):
         if s not in self.engines:
-            eng = Engine(s, {"base": self.enc["base"]})
-            for tag, cache_tag in (("ft", "ftfinal"), ("ft1", "ft1final")):
+            eng = Engine(s, {})
+            for tag, cache_tag in (("base", BASE), ("ft", "ftfinal"), ("ft1", "ft1final")):
                 eng.encoders[tag] = self.enc[tag]
                 eng.dense[tag] = DenseIndex(eng.cs, self.enc[tag], cache_tag, cache=True)
             eng.set_memory(self.train[self.train.coding_system == s])
             self.engines[s] = eng
             self.emb[s] = _name_emb(eng.cs)
+            self.display = getattr(self, "display", {})
+            self.display[s] = _display_names(self.train, eng.cs)
         return self.engines[s]
 
     def _score(self, cand, stage, s, variant):
@@ -347,10 +366,23 @@ class Mapper:
             best = ranker.top1(c3).reindex(range(len(idx)))
             ok = best["code_idx"].notna()
             ci = best["code_idx"].fillna(0).astype(np.int64).to_numpy()
+            # runner-up + ambiguity flag (close call or near-synonym twins) for review / set-based scoring
+            c3["p"] = _probs(c3)
+            second = (c3.sort_values(["qid", "p"], ascending=[True, False]).groupby("qid").nth(1)
+                      .set_index("qid").reindex(range(len(idx))))
+            ok2 = second["code_idx"].notna()
+            ci2 = second["code_idx"].fillna(0).astype(np.int64).to_numpy()
+            p1 = best["prob"].fillna(0).to_numpy(); p2 = second["p"].fillna(0).to_numpy()
+            n1 = [clean_desc(str(x)) for x in eng.cs.name_of[ci]]; n2 = [clean_desc(str(x)) for x in eng.cs.name_of[ci2]]
+            twin = np.array([ok2.iloc[i] and fuzz.token_set_ratio(n1[i], n2[i]) >= 90 for i in range(len(ci))])
             out[s] = pd.DataFrame({
                 "code": np.where(ok, eng.cs.codes[ci], ""),
-                "display": np.where(ok, eng.cs.name_of[ci], ""),
-                "confidence": best["prob"].fillna(0).round(4).to_numpy(),
+                "display": np.where(ok, self.display[s][ci], ""),
+                "confidence": np.round(p1, 4),
+                "alt_code": np.where(ok2, eng.cs.codes[ci2], ""),
+                "alt_display": np.where(ok2, self.display[s][ci2], ""),
+                "alt_confidence": np.round(p2, 4),
+                "ambiguous": (p2 >= 0.5 * np.maximum(p1, 1e-9)) | twin,
             }, index=np.asarray(idx))
         return out
 
@@ -366,12 +398,16 @@ def predict(input_csv, output_csv, review_threshold=0.5):
         uq = q.assign(_m=mention).drop_duplicates("_m").reset_index(drop=True)
         need = {s: np.unique(mention[q.coding_system.to_numpy() == s]) for s in SYSTEMS}
         res = m.run(uq, {s: need[s] for s in SYSTEMS})
-        for col in ("code", "display", "confidence"):
-            out[col] = ""
+        for col in ("code", "display", "alt_code", "alt_display"):
+            out[col] = pd.Series([""] * len(out), index=out.index, dtype=object)
+        out["confidence"] = np.nan
+        out["alt_confidence"] = np.nan
+        out["ambiguous"] = False
         for s, r in res.items():
             rows = np.where(q.coding_system.to_numpy() == s)[0]
             for col in r:
-                out.loc[out.index[rows], col] = r[col].reindex(mention[rows]).to_numpy()
+                kind = float if col in ("confidence", "alt_confidence") else (bool if col == "ambiguous" else object)
+                out.loc[out.index[rows], col] = r[col].reindex(mention[rows]).to_numpy(dtype=kind)
         out["confidence"] = pd.to_numeric(out["confidence"], errors="coerce").fillna(0)
         out["needs_review"] = out["confidence"] < review_threshold
     else:
@@ -382,6 +418,9 @@ def predict(input_csv, output_csv, review_threshold=0.5):
             out[f"{key}_code"] = r["code"].to_numpy()
             out[f"{key}_display"] = r["display"].to_numpy()
             out[f"{key}_confidence"] = r["confidence"].to_numpy()
+            out[f"{key}_alt_code"] = r["alt_code"].to_numpy()
+            out[f"{key}_alt_display"] = r["alt_display"].to_numpy()
+            out[f"{key}_ambiguous"] = r["ambiguous"].to_numpy()
         out["needs_review"] = (out["icd10cm_confidence"] < review_threshold) | (out["snomed_confidence"] < review_threshold)
     out.to_csv(output_csv, index=False)
     log(f"wrote {len(out)} rows to {output_csv} in {time.time() - t0:.0f}s")

@@ -1,0 +1,11 @@
+W1017 18:07:30.836000 20096 .venv\Lib\site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  22%|██▏       | 43/199 [00:00<00:00, 417.72it/s]Loading weights:  44%|████▎     | 87/199 [00:00<00:00, 419.14it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 941.19it/s]
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  25%|██▍       | 49/199 [00:00<00:00, 487.78it/s]Loading weights:  54%|█████▍    | 107/199 [00:00<00:00, 540.44it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 919.48it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  32%|███▏      | 64/199 [00:00<00:00, 598.08it/s]Loading weights:  62%|██████▏   | 124/199 [00:00<00:00, 556.47it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 865.55it/s]
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights:  23%|██▎       | 47/201 [00:00<00:00, 456.04it/s]Loading weights:  53%|█████▎    | 106/201 [00:00<00:00, 530.96it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 863.00it/s]
+18:07:46 ICD10CM: 86 rows -> 23788 candidates (277/row) retrieval 1s
+18:07:48 ICD10CM: features done 2s, 99 cols
+18:08:46 SNOMEDCT_US: 214 rows -> 121081 candidates (566/row) retrieval 15s
+18:08:57 SNOMEDCT_US: features done 26s, 99 cols
+18:09:32 wrote 300 rows to outputs/sample_long_pred.csv in 127s

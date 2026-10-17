@@ -1,0 +1,52 @@
+{
+ "SNOMEDCT_US": {
+  "r1_type_acc": 0.7249318801089918,
+  "type_ranker_acc": 0.7250681198910082,
+  "R1": {
+   "acc": 0.5173,
+   "recall": 0.9277,
+   "acc_seen": 0.6209,
+   "acc_unseen": 0.3933,
+   "acc_given_in_pool": 0.5576
+  },
+  "R1_rankonly": {
+   "acc": 0.5112,
+   "recall": 0.9277,
+   "acc_seen": 0.6152,
+   "acc_unseen": 0.3867,
+   "acc_given_in_pool": 0.551
+  },
+  "R1_type": {
+   "acc": 0.5125,
+   "recall": 0.9277,
+   "acc_seen": 0.6169,
+   "acc_unseen": 0.3876,
+   "acc_given_in_pool": 0.5525
+  }
+ },
+ "ICD10CM": {
+  "r1_type_acc": 0.8742411101474414,
+  "type_ranker_acc": 0.870338248048569,
+  "R1": {
+   "acc": 0.6791,
+   "recall": 0.9584,
+   "acc_seen": 0.7507,
+   "acc_unseen": 0.4499,
+   "acc_given_in_pool": 0.7086
+  },
+  "R1_rankonly": {
+   "acc": 0.6765,
+   "recall": 0.9584,
+   "acc_seen": 0.7501,
+   "acc_unseen": 0.4408,
+   "acc_given_in_pool": 0.7059
+  },
+  "R1_type": {
+   "acc": 0.6739,
+   "recall": 0.9584,
+   "acc_seen": 0.7501,
+   "acc_unseen": 0.4299,
+   "acc_given_in_pool": 0.7032
+  }
+ }
+}

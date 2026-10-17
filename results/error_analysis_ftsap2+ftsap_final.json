@@ -1,0 +1,247 @@
+{
+ "ICD10CM": {
+  "acc": 0.6825672159583694,
+  "n": 2306,
+  "category_acc": 0.784908933217693,
+  "chapter_acc": 0.8772766695576756,
+  "tolerant": {
+   "exact match": 0.6825672159583694,
+   "exact or same-name twin (identical preferred name)": 0.6825672159583694,
+   "exact or near-synonym (name similarity >= 90)": 0.7146574154379879,
+   "correct 3-character category": 0.784908933217693
+  },
+  "modes": {
+   "retrieval miss (gold not in candidates)": 96,
+   "specificity (right 3-char category, wrong code)": 225,
+   "right chapter, wrong category": 183,
+   "wrong chapter": 228
+  },
+  "slices": {
+   "gold code seen in training = True": [
+    1757,
+    0.7512805919180421
+   ],
+   "gold code seen in training = False": [
+    549,
+    0.46265938069216755
+   ],
+   "contains abbreviation = True": [
+    274,
+    0.781021897810219
+   ],
+   "contains abbreviation = False": [
+    2032,
+    0.6692913385826772
+   ],
+   "OCR / typo / markup noise = True": [
+    163,
+    0.7300613496932515
+   ],
+   "OCR / typo / markup noise = False": [
+    2143,
+    0.67895473635091
+   ],
+   "history / status-post = True": [
+    14,
+    0.35714285714285715
+   ],
+   "history / status-post = False": [
+    2292,
+    0.6845549738219895
+   ],
+   "negation cue = True": [
+    29,
+    0.5862068965517241
+   ],
+   "negation cue = False": [
+    2277,
+    0.6837944664031621
+   ],
+   "laterality = True": [
+    236,
+    0.7076271186440678
+   ],
+   "laterality = False": [
+    2070,
+    0.6797101449275362
+   ],
+   "\u22656 tokens = True": [
+    243,
+    0.6296296296296297
+   ],
+   "\u22656 tokens = False": [
+    2063,
+    0.6888027144934561
+   ]
+  },
+  "subconcept": {
+   "DiagnosisCode": [
+    2305,
+    0.6824295010845987
+   ]
+  },
+  "calibration": {
+   "(-0.001, 0.2]": [
+    47,
+    0.10638297872340426
+   ],
+   "(0.2, 0.4]": [
+    206,
+    0.21359223300970873
+   ],
+   "(0.4, 0.6]": [
+    299,
+    0.3377926421404682
+   ],
+   "(0.6, 0.8]": [
+    344,
+    0.5552325581395349
+   ],
+   "(0.8, 0.9]": [
+    303,
+    0.7128712871287128
+   ],
+   "(0.9, 1.0]": [
+    1107,
+    0.9186991869918699
+   ]
+  },
+  "coverage_accuracy": {
+   "1.0": 0.6825672159583694,
+   "0.9": 0.7387951807228915,
+   "0.8": 0.7951219512195122,
+   "0.7": 0.8420074349442379,
+   "0.5": 0.9132697311361665,
+   "0.3": 0.9566473988439307
+  }
+ },
+ "SNOMEDCT_US": {
+  "acc": 0.5219346049046322,
+  "n": 7340,
+  "tag_acc": 0.7316076294277929,
+  "tolerant": {
+   "exact match": 0.5219346049046322,
+   "exact or same-name twin (identical preferred name)": 0.52425068119891,
+   "exact or near-synonym (name similarity >= 90)": 0.6057220708446867
+  },
+  "modes": {
+   "retrieval miss (gold not in candidates)": 531,
+   "wrong semantic tag (e.g. substance vs procedure)": 1591,
+   "same semantic tag, wrong concept": 1387
+  },
+  "slices": {
+   "gold code seen in training = True": [
+    3999,
+    0.6216554138534633
+   ],
+   "gold code seen in training = False": [
+    3341,
+    0.4025740796168812
+   ],
+   "contains abbreviation = True": [
+    1004,
+    0.5239043824701195
+   ],
+   "contains abbreviation = False": [
+    6336,
+    0.5216224747474747
+   ],
+   "OCR / typo / markup noise = True": [
+    675,
+    0.4488888888888889
+   ],
+   "OCR / typo / markup noise = False": [
+    6665,
+    0.5293323330832708
+   ],
+   "history / status-post = True": [
+    42,
+    0.5
+   ],
+   "history / status-post = False": [
+    7298,
+    0.5220608385859139
+   ],
+   "negation cue = True": [
+    102,
+    0.45098039215686275
+   ],
+   "negation cue = False": [
+    7238,
+    0.5229345122962145
+   ],
+   "laterality = True": [
+    377,
+    0.6047745358090185
+   ],
+   "laterality = False": [
+    6963,
+    0.5174493752692805
+   ],
+   "\u22656 tokens = True": [
+    582,
+    0.4381443298969072
+   ],
+   "\u22656 tokens = False": [
+    6758,
+    0.5291506362829239
+   ]
+  },
+  "subconcept": {
+   "Device": [
+    437,
+    0.4576659038901602
+   ],
+   "DiagnosisCode": [
+    2700,
+    0.6266666666666667
+   ],
+   "EncounterType": [
+    567,
+    0.5308641975308642
+   ],
+   "LabService": [
+    858,
+    0.4766899766899767
+   ],
+   "ProcedureCode": [
+    2777,
+    0.44256391789701116
+   ]
+  },
+  "calibration": {
+   "(-0.001, 0.2]": [
+    1267,
+    0.13654301499605367
+   ],
+   "(0.2, 0.4]": [
+    1780,
+    0.31685393258426964
+   ],
+   "(0.4, 0.6]": [
+    1448,
+    0.5048342541436464
+   ],
+   "(0.6, 0.8]": [
+    1217,
+    0.7189811010682005
+   ],
+   "(0.8, 0.9]": [
+    750,
+    0.8573333333333333
+   ],
+   "(0.9, 1.0]": [
+    878,
+    0.9624145785876993
+   ]
+  },
+  "coverage_accuracy": {
+   "1.0": 0.5219346049046322,
+   "0.9": 0.5685740236148955,
+   "0.8": 0.6161444141689373,
+   "0.7": 0.6625145971195018,
+   "0.5": 0.7716621253405994,
+   "0.3": 0.8773841961852861
+  }
+ }
+}

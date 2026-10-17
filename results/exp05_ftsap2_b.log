@@ -70,3 +70,25 @@ dense_base_rank         1896.0
 fz_tsort                1889.0
 knn_base_max            1871.0
 kchar_max               1822.0
+14:28:48 SNOMEDCT_US {'acc': 0.5131, 'recall': 0.9277, 'acc_seen': 0.6172, 'acc_unseen': 0.3885, 'acc_given_in_pool': 0.5531}
+dense_ft_sim_gap      466345.0
+dense_ft_rank         148398.0
+dense_base_sim_gap     43883.0
+kchar_rank             26851.0
+knn_ft_rank            22289.0
+char_rank              16208.0
+char_sim_gap            9565.0
+kchar_sum               9251.0
+code_prior              9144.0
+p_grp_sub               8556.0
+c_tag                   8215.0
+bm25_rank               7546.0
+dense_base_rank         7253.0
+char_sim                6022.0
+dense_ft_sim            5663.0
+q_nchar                 5067.0
+fz_ratio                5033.0
+dense_base_sim          4824.0
+fz_tsort                4807.0
+bm25_sim                4681.0
+{'ICD10CM': {'acc': 0.6691, 'recall': 0.9584, 'acc_seen': 0.7416, 'acc_unseen': 0.4372, 'acc_given_in_pool': 0.6982}, 'SNOMEDCT_US': {'acc': 0.5131, 'recall': 0.9277, 'acc_seen': 0.6172, 'acc_unseen': 0.3885, 'acc_given_in_pool': 0.5531}}

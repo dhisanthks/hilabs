@@ -1,0 +1,18 @@
+{
+ "ICD10CM": {
+  "R1": {
+   "acc": 0.6761,
+   "recall": 0.9584,
+   "acc_seen": 0.749,
+   "acc_unseen": 0.4426,
+   "acc_given_in_pool": 0.7054
+  },
+  "R1_amb": {
+   "acc": 0.6778,
+   "recall": 0.9584,
+   "acc_seen": 0.7496,
+   "acc_unseen": 0.4481,
+   "acc_given_in_pool": 0.7072
+  }
+ }
+}

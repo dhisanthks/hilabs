@@ -19,7 +19,7 @@ from .lexical import LexicalIndex
 from .normalize import clean, clean_desc
 from .query import variants
 
-# SNOMED semantic tags that carry >0.5% of gold labels — retrieved separately so each concept type is in the pool
+# SNOMED semantic tags that carry >0.5% of gold labels - retrieved separately so each concept type is in the pool
 STRAT_TAGS = ["finding", "disorder", "procedure", "observable entity", "regime/therapy", "physical object",
               "qualifier value", "situation", "body structure", "substance", "environment", "event",
               "morphologic abnormality"]
@@ -76,7 +76,11 @@ class Engine:
         self.top_lex, self.top_dense, self.knn_k = top_lex, top_dense, knn_k
         self.meta = self.cs.meta
         self.groups = None
-        if system == "SNOMEDCT_US" and self.encoders:
+        self._build_groups()
+
+    def _build_groups(self):
+        """SNOMED tag-stratified retrieval groups (built once any dense encoder is attached)."""
+        if self.groups is None and self.system == "SNOMEDCT_US" and self.encoders:
             dev = "cuda" if torch.cuda.is_available() else "cpu"
             tag_desc = self.cs.tag_of[self.cs.desc.code_idx.to_numpy()]
             self.groups = {t: torch.from_numpy(np.where(tag_desc == t)[0]).to(dev) for t in STRAT_TAGS}
@@ -118,6 +122,7 @@ class Engine:
     def candidates(self, q: pd.DataFrame, exclude_self=False) -> pd.DataFrame:
         """q: rows with entity [, chunk_text, subconcept]. Returns candidate feature table."""
         t0 = time.time()
+        self._build_groups()
         n = len(q)
         var_lists = [variants(e) for e in q["entity"]]
         flat, owner = [], []

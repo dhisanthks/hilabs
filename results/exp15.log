@@ -1,0 +1,29 @@
+17:48:36 SNOMEDCT_US type accuracy: R1 argmax type 0.7249 | type ranker 0.7251 | gold type in pool 0.9981
+18:03:34 SNOMEDCT_US R1 baseline 0.5173 | + R1 rank (stacking only) 0.5112 | + type-ranker features 0.5125 {'acc': 0.5125, 'recall': 0.9277, 'acc_seen': 0.6169, 'acc_unseen': 0.3876, 'acc_given_in_pool': 0.5525}
+r1                    672981.0
+dense_ft_sim_gap      115843.0
+r1_in_type              9789.0
+dense_ft_rank           9648.0
+p_type2                 9425.0
+dense_ft1_sim_gap       6372.0
+c_tag                   6275.0
+kchar_rank              5993.0
+char_sim_gap            5522.0
+knn_vote                4772.0
+dense_base_sim_gap      4392.0
+dense_ft1_sim           4367.0
+18:03:56 ICD10CM type accuracy: R1 argmax type 0.8742 | type ranker 0.8703 | gold type in pool 0.9987
+18:06:41 ICD10CM R1 baseline 0.6791 | + R1 rank (stacking only) 0.6765 | + type-ranker features 0.6739 {'acc': 0.6739, 'recall': 0.9584, 'acc_seen': 0.7501, 'acc_unseen': 0.4299, 'acc_given_in_pool': 0.7032}
+r1                   200038.0
+dense_ft_sim_gap      30943.0
+dense_ft_rank          5414.0
+dense_ft1_sim_gap      3359.0
+r1_in_type             3341.0
+p_type2                2780.0
+knn_ft_rank            2600.0
+knn_ft1_rank           1970.0
+char_sim_gap           1967.0
+dense_base_sim         1801.0
+knn_vote               1783.0
+dense_ft1_sim          1780.0
+{'SNOMEDCT_US': {'r1_type_acc': 0.7249318801089918, 'type_ranker_acc': 0.7250681198910082, 'R1': {'acc': 0.5173, 'recall': 0.9277, 'acc_seen': 0.6209, 'acc_unseen': 0.3933, 'acc_given_in_pool': 0.5576}, 'R1_rankonly': {'acc': 0.5112, 'recall': 0.9277, 'acc_seen': 0.6152, 'acc_unseen': 0.3867, 'acc_given_in_pool': 0.551}, 'R1_type': {'acc': 0.5125, 'recall': 0.9277, 'acc_seen': 0.6169, 'acc_unseen': 0.3876, 'acc_given_in_pool': 0.5525}}, 'ICD10CM': {'r1_type_acc': 0.8742411101474414, 'type_ranker_acc': 0.870338248048569, 'R1': {'acc': 0.6791, 'recall': 0.9584, 'acc_seen': 0.7507, 'acc_unseen': 0.4499, 'acc_given_in_pool': 0.7086}, 'R1_rankonly': {'acc': 0.6765, 'recall': 0.9584, 'acc_seen': 0.7501, 'acc_unseen': 0.4408, 'acc_given_in_pool': 0.7059}, 'R1_type': {'acc': 0.6739, 'recall': 0.9584, 'acc_seen': 0.7501, 'acc_unseen': 0.4299, 'acc_given_in_pool': 0.7032}}}

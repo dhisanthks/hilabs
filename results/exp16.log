@@ -1,0 +1,28 @@
+18:10:13 fold 0: 7711 groups, 2 epochs
+W1017 18:10:21.789000 20328 .venv\Lib\site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  26%|██▌       | 52/199 [00:00<00:00, 517.84it/s]Loading weights:  52%|█████▏    | 104/199 [00:00<00:00, 487.15it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 657.78it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.bias   | MISSING | 
+classifier.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  ce step 500/2572 loss 1.739
+  ce step 1000/2572 loss 2.153
+  ce step 1500/2572 loss 1.787
+  ce step 2000/2572 loss 0.677
+  ce step 2500/2572 loss 1.047
+19:03:47 fold 1: 7692 groups, 2 epochs
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  23%|██▎       | 45/199 [00:00<00:00, 444.04it/s]Loading weights:  45%|████▌     | 90/199 [00:00<00:00, 223.22it/s]Loading weights:  60%|█████▉    | 119/199 [00:00<00:00, 194.56it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 303.75it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.bias   | MISSING | 
+classifier.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  ce step 500/2564 loss 1.762
+  ce step 1000/2564 loss 1.773
