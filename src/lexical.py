@@ -12,7 +12,7 @@ import numpy as np
 import scipy.sparse as sp
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
-from .dicts import CACHE
+from .dicts import CACHE, atomic_save
 from .normalize import clean_desc
 
 
@@ -52,7 +52,7 @@ class LexicalIndex:
             w = tf.data * (k1 + 1) / (tf.data + norm[tf.row]) * self.idf[tf.col]
             D = sp.csr_matrix((w.astype(np.float32), (tf.row, tf.col)), shape=tf.shape)
         self.DT = D.T.tocsr()
-        pickle.dump((self.vec, self.DT, self.idf), open(path, "wb"), protocol=4)
+        atomic_save(path, lambda f: pickle.dump((self.vec, self.DT, self.idf), f, protocol=4))
 
     def query_matrix(self, queries):
         Q = self.vec.transform(queries)

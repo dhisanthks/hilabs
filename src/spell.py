@@ -17,7 +17,7 @@ from rapidfuzz import process
 from rapidfuzz.distance import Levenshtein
 
 from .abbrev import ABBREV
-from .dicts import CACHE, SYSTEMS, load_system
+from .dicts import CACHE, SYSTEMS, atomic_save, load_system
 from .normalize import clean_desc
 
 
@@ -31,7 +31,7 @@ class Speller:
             for s in SYSTEMS:
                 for t in load_system(s).desc.description.map(clean_desc):
                     vocab.update(t.split())
-            pickle.dump(vocab, open(pkl, "wb"))
+            atomic_save(pkl, lambda f: pickle.dump(vocab, f))
         self.vocab = collections.Counter(vocab)
         for t in extra_texts:
             self.vocab.update(t.split())

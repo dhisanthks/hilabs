@@ -21,6 +21,20 @@ SYSTEMS = ("ICD10CM", "SNOMEDCT_US")
 _TAG_RE = re.compile(r"\(([^()]+)\)\s*$")
 
 
+def atomic_save(path, write):
+    """Write a cache file via a temp file + rename, so a full disk or a killed run never leaves a truncated cache that
+    later runs would try to load. write(fileobj) does the actual serialization."""
+    tmp = path + ".tmp"
+    try:
+        with open(tmp, "wb") as f:
+            write(f)
+        os.replace(tmp, path)
+    except BaseException:
+        if os.path.exists(tmp):
+            os.remove(tmp)
+        raise
+
+
 _DICT_DERIVED = ("icd.parquet", "snomed.parquet", "ICD10CM_system.pkl", "SNOMEDCT_US_system.pkl", "vocab.pkl",
                  "lex_char_ICD10CM.pkl", "lex_char_SNOMEDCT_US.pkl", "lex_bm25_ICD10CM.pkl", "lex_bm25_SNOMEDCT_US.pkl")
 _version_checked = False
@@ -58,11 +72,11 @@ def _load_raw(system: str) -> pd.DataFrame:
     elif system == "ICD10CM":
         df = pd.read_excel(ICD_XLSX, dtype=str)
         df.columns = ["code", "description"]
-        df.to_parquet(pq)
+        atomic_save(pq, df.to_parquet)
     else:
         df = pd.read_excel(SNOMED_XLSX, sheet_name="SNOMED codes", dtype=str)
         df.columns = ["code", "description", "order"]
-        df.to_parquet(pq)
+        atomic_save(pq, df.to_parquet)
     df = df.dropna(subset=["code", "description"]).copy()
     df["code"] = df["code"].str.strip()
     df["description"] = df["description"].str.strip()
@@ -148,7 +162,7 @@ def load_system(system: str) -> CodeSystem:
         meta = _icd_meta(codes, name_of)
 
     cs = CodeSystem(system, raw, codes, code_to_idx, name_of, tag_of, meta)
-    pd.to_pickle(cs, pkl)
+    atomic_save(pkl, lambda f: pd.to_pickle(cs, f))
     return cs
 
 

@@ -694,3 +694,17 @@ PDF: 3 pages + appendix page (external resources moved to the appendix page).
 ## 2026-10-18 ~20:00 — Write-up revised per reviewer comments
 - All SNOMED numbers now diagnosis-only (67.4 exact, 57.4 unseen, 84.4 tag, 73.9 near-synonym, 95.9 @30% coverage); accuracy table completed with diagnosis-only column; bagged-ranker row removed.
 - Added: how models are trained (fine-tuned SapBERT rounds 1/2, LambdaRank retriever weighting, cross-encoder, QLoRA LLM), design decisions tagged by stage, flagging mechanism, 7 failure-mode core-requirement table, open-question answers, label ambiguity, future improvements.
+
+## 2026-10-18 ~21:10 — Submission hardening (clean-room test, README, robustness)
+- **Clean-room test**: fresh copy containing only the files a commit would include (git tracked + untracked-not-ignored),
+  the 3 data files and a fresh unzip of `models.zip`. All runs succeeded with every row mapped: brief schema with and
+  without chunk_text; training schema with blank `code`, without `code`/`display`, and with `coding_system` variants
+  (identical outputs); `--no-llm`. (Dictionary caches were hard-linked for disk space; the ICD cache rebuild also ran.)
+- **Found**: GitHub was a day stale — `src/context.py`, `src/llm_rerank.py`, `kaggle/` never committed; must push.
+- **Fixes**: atomic cache writes (`dicts.atomic_save`; a disk-full run had left a truncated pickle that crashed later
+  runs); `coding_system` spelling variants normalized (previously silently unmapped); `--no-llm` flag, automatic when no
+  CUDA GPU (final stage = R2; R3 needs LLM features).
+- **New**: `scripts/score.py` (exact match per system + headline + abstention); README rewritten with a step-by-step
+  "Run it on your test set" section, troubleshooting, diagnosis-only numbers, coverage table.
+- **Latency** (`experiments/latency_per_term.py`, 60 terms, both systems, one at a time): median 3.74 s / p95 4.37 s
+  with LLM, 2.65 / 3.02 s without; batch ~0.85 / ~0.2 s per term.

@@ -25,12 +25,14 @@ from . import ranker
 from .coupling import coupling_features, pair_table
 from .crossenc import CrossEncoder, cand_text, context_window, make_query
 from .cv import N_FOLDS, assign_folds
-from .dicts import CACHE, ROOT, SYSTEMS, load_system, load_train
+from .dicts import CACHE, ROOT, SYSTEMS, atomic_save, load_system, load_train
 from .engine import DenseIndex, Engine, log
 from .evaluate import cv_rerank
 from .normalize import clean, clean_desc
 
 ART = os.path.join(ROOT, "models")
+# trained models on the Hugging Face Hub (downloaded automatically into models/ on the first predict)
+MODELS_REPO = os.environ.get("HILABS_MODELS_REPO", "Dhisanth/hilabs-term-mapping")
 RUN1 = "ftsap"     # round-1 OOF candidate tables (experiments/exp05_finetune_cv.py)
 RUN = "ftsap2"     # round-2 OOF tables: fine-tuned with iterative hard negatives mined from RUN1
 CE_RUN = "cectx2"  # OOF cross-encoder scores (experiments/exp16_crossenc_v2.py): negatives from final R1, 2 epochs
@@ -68,6 +70,14 @@ def read_input(path: str) -> pd.DataFrame:
         raise ValueError(f"input needs an entity / clinical_entity column, got {list(df.columns)}")
     if "chunk_text" not in df:
         df["chunk_text"] = ""
+    if "coding_system" in df:   # tolerate spelling variants (ICD-10-CM, icd10, SNOMED CT, snomed, ...)
+        key = df["coding_system"].str.upper().str.replace(r"[^A-Z0-9]", "", regex=True)
+        df["coding_system"] = np.select([key.str.startswith("ICD"), key.str.startswith("SNOMED")],
+                                        ["ICD10CM", "SNOMEDCT_US"], df["coding_system"])
+        bad = ~df["coding_system"].isin(SYSTEMS)
+        if bad.any():
+            log(f"WARNING: {int(bad.sum())} rows have an unrecognized coding_system "
+                f"{sorted(df.loc[bad, 'coding_system'].unique())[:5]} — they are left unmapped")
     return df
 
 
@@ -94,7 +104,8 @@ def _name_emb(cs):
     if not os.path.exists(path):
         from .encoders import Encoder
         enc = Encoder(BASE)
-        np.save(path, enc.encode([clean_desc(str(x)) for x in cs.name_of], query=False, batch_size=1024))
+        E = enc.encode([clean_desc(str(x)) for x in cs.name_of], query=False, batch_size=1024)
+        atomic_save(path, lambda f: np.save(f, E))
         del enc; torch.cuda.empty_cache()
     import warnings
     with warnings.catch_warnings():
@@ -347,9 +358,19 @@ def _display_names(train, cs):
     return out
 
 
+def ensure_models():
+    """Released models live on the Hugging Face Hub (MODELS_REPO). If models/ is missing, download them once."""
+    if os.path.exists(os.path.join(ART, "ranker_features.json")):
+        return
+    from huggingface_hub import snapshot_download
+    log(f"models/ not found — downloading the trained models from Hugging Face ({MODELS_REPO}, ~1.7 GB, once)")
+    snapshot_download(repo_id=MODELS_REPO, local_dir=ART, token=os.environ.get("HF_TOKEN") or None)
+
+
 class Mapper:
-    def __init__(self):
+    def __init__(self, use_llm=True):
         from .encoders import Encoder
+        ensure_models()
         self.train = load_train()
         self.enc = {"ft": Encoder(os.path.join(ART, "biencoder"), pooling="cls"),
                     "ft1": Encoder(os.path.join(ART, "biencoder_r1"), pooling="cls"),
@@ -367,8 +388,11 @@ class Mapper:
         self.llm = None
         self.llm_adapter = os.path.join(ART, "llm_adapter")
         self.llm2_adapter = os.path.join(ART, "llm2_adapter")
-        self.use_llm = any(k.startswith("r2l_") for k in self.feats)
-        self.use_llm2 = any("llm2_lp" in v for v in self.feats.values())
+        self.use_llm = use_llm and any(k.startswith("r2l_") for k in self.feats)
+        if self.use_llm and not torch.cuda.is_available():
+            log("WARNING: no CUDA GPU found — the 4-bit LLM stage needs one; running without it (final stage = R2)")
+            self.use_llm = False
+        self.use_llm2 = self.use_llm and any("llm2_lp" in v for v in self.feats.values())
         if self.use_llm and not os.path.exists(os.path.join(self.llm_adapter, "adapter_config.json")):
             raise RuntimeError("rankers were trained with the LLM stage but models/llm_adapter is missing — unzip "
                                "kaggle/llm_out/adapter_final.zip into models/llm_adapter (or retrain without kaggle/llm_out)")
@@ -524,7 +548,7 @@ class Mapper:
             eng = self.engines[s]
             self.engine(o)
             cp = coupling_features(cand, s, topb, eng.cs, self.engines[o].cs, self.emb[s], self.emb[o], self.pairs)
-            if FINAL_STAGE.get(s, "r3") == "r3":
+            if self.use_llm and FINAL_STAGE.get(s, "r3") == "r3":   # R3 rankers read the LLM features
                 c3 = cand.drop(columns=["score", "prob"]).join(cp)
                 c3["score"] = self._score(c3, "r3", s, variant)
             else:   # final decision = R2 for this system (coupling did not help it in CV)
@@ -553,7 +577,7 @@ class Mapper:
         return out
 
 
-def predict(input_csv, output_csv, review_threshold=0.5, assume_subconcept=None):
+def predict(input_csv, output_csv, review_threshold=0.5, assume_subconcept=None, use_llm=True):
     t0 = time.time()
     q = read_input(input_csv)
     if assume_subconcept:
@@ -562,7 +586,9 @@ def predict(input_csv, output_csv, review_threshold=0.5, assume_subconcept=None)
         else:
             q["subconcept"] = q["subconcept"].replace("", assume_subconcept)
         log(f"subconcept assumed = {assume_subconcept} where missing")
-    m = Mapper()
+    m = Mapper(use_llm=use_llm)
+    if not m.use_llm:
+        log("LLM stage off: final decision = R2 (cross-encoder) ranker")
     out = pd.read_csv(input_csv, dtype=str, keep_default_na=False)   # keep the input's own column names/order
     if "coding_system" in q:
         # long format: rows of the same (entity, chunk) mention are coupled; one requested system per row

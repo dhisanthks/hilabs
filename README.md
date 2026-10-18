@@ -1,189 +1,199 @@
 # HiLabs Clinical Term Mapping Engine
 
-Maps a clinical entity extracted from a medical chart (plus its chunk context) to an **ICD-10-CM** code
-and a **SNOMED CT US** concept. The engine runs end to end from one command, is deterministic (fixed seeds),
-and runs on a laptop GPU (developed on an RTX 3050, 4 GB).
+Maps a clinical entity extracted from a medical chart (plus its chunk context) to an **ICD-10-CM** code and a
+**SNOMED CT US** concept. One command, deterministic, runs locally on a 4 GB laptop GPU — no chart data leaves the machine.
 
-> Results, design rationale and error analysis: see [`docs/WORKLOG.md`](docs/WORKLOG.md) (full experiment log)
-> and the write-up PDF. Demo video: _link to be added_.
+- **Write-up (PDF):** [`docs/HiLabs_TermMapping_Writeup.pdf`](docs/HiLabs_TermMapping_Writeup.pdf)
+- **Demo video:** _link to be added_
+- **Trained models (Hugging Face, 1.7 GB):** https://huggingface.co/Dhisanth/hilabs-term-mapping — downloaded automatically on the first run
+- **Full experiment log:** [`docs/WORKLOG.md`](docs/WORKLOG.md)
 
-## Results (5-fold cross-validation, grouped by chunk; every learned component re-trained per fold)
+## Results (5-fold cross-validation on diagnosis / condition terms — the evaluation set's scope)
 
-| Exact match | ICD-10-CM | SNOMED CT |
+Every learned component (encoders, cross-encoder, LLM, kNN memory, priors, rankers) is re-trained inside each fold;
+folds are grouped by source chunk, so no evaluated term is ever seen in training.
+
+| | ICD-10-CM | SNOMED CT |
 |---|---|---|
-| All terms | **71.1%** | **58.2%** |
-| Diagnosis / condition terms (brief's scope) | 71.1% | **67.4%** |
-| Codes never seen in training (long tail) | 50.1% | 47.0% |
-| Rare or never-seen codes (≤ 2 training examples) | 61.5% | 53.7% |
-| Partial credit: ICD 3-char category / SNOMED semantic tag | 81.6% | 76.9% |
-| Exact or near-synonym (name similarity ≥ 90) | 74.4% | 65.6% |
-| Most-confident 30% of terms (abstain on the rest) | 96.4% | 90.8% |
+| **Exact match** | **71.1%** | **67.4%** |
+| Codes never seen in training (long tail) | 50.1% | 57.4% |
+| Rare or never-seen codes (≤ 2 training examples) | 61.5% | 63.3% |
+| Partial credit: ICD 3-char category / SNOMED semantic tag | 81.6% | 84.4% |
+| Exact or near-synonym (name similarity ≥ 90) | 74.4% | 73.9% |
 
-The shipped rankers are additionally 5-seed bagged (+0.2 ICD / +0.5 SNOMED, measured separately).
-**The evaluation set contains only diagnosis/condition terms (confirmed by the organisers)** → the relevant expectation
-is **ICD ≈ 71%, SNOMED ≈ 67%**, and the engine must be run with `--assume-subconcept DiagnosisCode` (the rankers and the
-LLM prompt use the entity type; the flag fills it when the input has no `subconcept` column).
-Label self-consistency on near-duplicate training terms is 93.7% (ICD) / 84.6% (SNOMED) — a practical ceiling for
-exact match. Full write-up: [`docs/HiLabs_TermMapping_Writeup.pdf`](docs/HiLabs_TermMapping_Writeup.pdf).
+**Headline (the lower of the two systems): 67.4%, set by SNOMED CT.** Label self-consistency on near-duplicate
+training terms is 93.7% (ICD) / 84.6% (SNOMED) — a practical ceiling for exact match.
 
-## Quick start for evaluators
-1. **Environment** — Python 3.10+, NVIDIA GPU ≥ 4 GB (CUDA), 16 GB RAM, ~15 GB free disk, internet on first run:
-   ```bash
-   python -m venv .venv && .venv\Scripts\activate          # Linux/macOS: source .venv/bin/activate
-   pip install torch --index-url https://download.pytorch.org/whl/cu128
-   pip install -r requirements.txt
-   ```
-2. **Data** (not in the repo — proprietary; place in the repository root): `hackathon_train.csv` (also used at prediction
-   time as the engine's memory of coded examples), `icd10cm_codes.xlsx`, `SNOMEDCT_US_codes_and_descriptions.xlsx`.
-3. **Trained models** — download `models.zip` (_link to be added_) and unzip it in the repository root → `models/`.
-4. **Predict** (the evaluation set is diagnoses/conditions only):
-   ```bash
-   python run.py predict --input eval.csv --output outputs/predictions.csv --assume-subconcept DiagnosisCode
-   ```
-   First run: downloads SapBERT + Qwen3-4B-4bit from Hugging Face (~3.2 GB) and builds dictionary embedding caches
-   (~20–30 min, once). Then ~0.85 s per term. Output keeps the input columns and adds `icd10cm_code`, `snomed_code`
-   (+ display, confidence, runner-up, review flags).
-5. Optional: `python demo.py --cases` (hard-case walkthrough) · `python run.py train` (rebuild all models, ~8 h).
+**Coverage / abstention.** Every row always gets a code (blanking a code can only lower exact match), plus a calibrated
+`confidence`. Abstaining on the least-confident terms gives:
+
+| Terms attempted (most confident first) | 100% | 90% | 70% | 50% | 30% |
+|---|---|---|---|---|---|
+| SNOMED CT (diagnosis) | 67.4% | 72.4% | 82.4% | 90.1% | 95.9% |
+| ICD-10-CM | 71.1% | 76.3% | 85.4% | 92.3% | 96.4% |
+
+---
+
+## Run it on your test set
+
+### 1. Requirements
+- Python **3.11+** (developed on 3.13), Windows or Linux
+- NVIDIA GPU with **≥ 4 GB VRAM** and CUDA (needed for the 4-bit LLM stage; without a GPU the engine falls back
+  automatically to the no-LLM mode — see step 7)
+- 16 GB RAM, **~13 GB free disk** (our models 1.7 GB, base models 3.2 GB — both from Hugging Face — and dictionary caches ~7 GB)
+- Internet on the first run (downloads SapBERT and Qwen3-4B-Instruct-2507 4-bit from Hugging Face)
+
+### 2. Install
+```bash
+git clone <this repo> && cd hilabs
+python -m venv .venv
+.venv\Scripts\activate                     # Linux/macOS: source .venv/bin/activate
+pip install torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128
+pip install -r requirements.txt
+```
+Optional: `copy .env.example .env` (Linux: `cp`) and set `HF_TOKEN` if Hugging Face rate-limits downloads.
+No API keys are needed — nothing calls an external service.
+
+### 3. Data files (not in the repo — proprietary)
+Put these three files in the **repository root**, with exactly these names:
+
+| File | Why it is needed at prediction time |
+|---|---|
+| `icd10cm_codes.xlsx` | ICD-10-CM answer space |
+| `SNOMEDCT_US_codes_and_descriptions.xlsx` | SNOMED CT answer space |
+| `hackathon_train.csv` | the engine's memory of coded examples (nearest-training-term retrieval and display names) |
+
+### 4. Trained models — pulled automatically from Hugging Face
+The weights are on the Hugging Face Hub: **https://huggingface.co/Dhisanth/hilabs-term-mapping**. Nothing to do:
+if `models/` is missing, the first `run.py predict` downloads them into `models/` (~1.7 GB, once). To fetch them
+manually instead: `hf download Dhisanth/hilabs-term-mapping --local-dir models`. (Another repo id can be set with
+the environment variable `HILABS_MODELS_REPO`.)
+
+### 5. Predict
+```bash
+python run.py predict --input test.csv --output outputs/predictions.csv --assume-subconcept DiagnosisCode
+```
+`--assume-subconcept DiagnosisCode` fills a missing or empty `subconcept` (the evaluation set is diagnoses/conditions
+only; rows that already have a subconcept keep it).
+
+**Input** — either layout works; column names are case-insensitive:
+
+| Layout | Columns | Output |
+|---|---|---|
+| **Training schema** (one row per term × coding system) | `entity, chunk_text, coding_system[, code, display, subconcept]` | same file, row order kept, with `code` and `display` filled for each row's `coding_system`, plus `confidence, alt_code, alt_display, alt_confidence, ambiguous, needs_review` |
+| Brief schema (one row per term) | `chunk_id, clinical_entity[, chunk_text]` | input columns + `icd10cm_code, snomed_code` with display / confidence / runner-up per system, and `needs_review` |
+
+- In the training schema `code` / `display` may be blank or absent; any existing values are overwritten with predictions
+  (keep your gold file separately). `coding_system` spelling variants (`ICD-10-CM`, `icd10`, `SNOMED CT`, …) are accepted.
+- `chunk_text` is optional but improves accuracy (abbreviations, context).
+- Rows of the same (entity, chunk) are mapped once and both systems inform each other.
+
+**Run time** (RTX 3050 Laptop, 4 GB): ~1 min model load; the **first run** also builds the dictionary embedding and
+lexical caches (~20–30 min, once, under `cache/`). Then ~0.85 s per term in batch (~45 min per 3,000 terms).
+
+### 6. Check accuracy
+Score the predictions against your gold file (the same test file with the true codes filled in):
+```bash
+python scripts/score.py --pred outputs/predictions.csv --gold gold.csv
+```
+Rows are matched by position (`run.py` keeps the input's row order); both layouts are supported (training schema:
+`code` column per `coding_system`; brief schema: `icd10cm_code` / `snomed_code`). Example output (format only — numbers
+shown are our cross-validation figures):
+```
+ICD-10-CM  n= 1200  exact match  71.1%   3-char category  81.6%   unflagged 70.0% of rows →  85.4% exact
+SNOMED CT  n= 1200  exact match  67.4%   unflagged 70.0% of rows →  82.4% exact
+HEADLINE (lower of the two): 67.4%
+```
+- **exact match** — the brief's primary metric, per coding system; **HEADLINE** — the lower of the two.
+- **3-char category** — ICD partial credit (right category, wrong specificity).
+- **unflagged** — accuracy if the rows flagged `needs_review` are abstained on (coverage / abstention).
+
+### 7. Options and troubleshooting
+| Situation | What to do |
+|---|---|
+| No CUDA GPU, or the LLM does not fit / fails | `--no-llm` (automatic when no CUDA GPU is found): skips the LLM stage, final decision = cross-encoder ranker; ~0.2 s/term, about 3–4 points lower accuracy (ICD ≈ 68%, SNOMED dx ≈ 64%) |
+| CUDA out of memory | close other GPU programs; or `--no-llm` |
+| "rankers were trained with the LLM stage but models/llm_adapter is missing" | incomplete download — delete `models/` and run again |
+| Hugging Face download errors / rate limits | set `HF_TOKEN` in `.env`; `HF_HOME` moves the model cache |
+| Review threshold | `--review-threshold 0.5` (default) sets `needs_review = confidence < threshold` |
+| Dictionaries replaced by a new release | handled automatically (see *Version drift*) |
+
+Hard-case walkthrough (abbreviation collision, OCR noise, specificity): `python demo.py --cases`.
+
+---
 
 ## How it works
 
 ```
-entity + chunk ──► normalize ──► candidate generation (~250–475 codes/term) ──► LightGBM LambdaRank ──► code + confidence
-                   │               ├─ char n-gram TF-IDF over dictionary descriptions
-                   │               ├─ BM25 over dictionary descriptions
-                   │               ├─ fine-tuned SapBERT (dense) over descriptions   ┐ SNOMED: also top-k inside
-                   │               ├─ base SapBERT (dense) over descriptions         ┘ each semantic tag
-                   │               ├─ fine-tuned + base SapBERT kNN over training terms (coder conventions)
-                   │               └─ char kNN over training terms
-                   └─ abbreviation expansion (multi-sense), spelling / OCR repair, glued-word splitting
+entity + chunk ─► 1 normalize ─► 2 candidate generation ─► 3 R1 LightGBM ─► 4 cross-encoder ─► 5 fine-tuned LLM ─► code
+                  (query variants)  (~250–475 codes/term)    LambdaRank        (R2, top-30)       (R2+LLM, top-10)   + confidence
+                                                             ~110 features                         ICD: + coupling (R3)
 ```
+1. **Normalize** — unidecode, markup / `(hcc)` stripping, ~350 multi-sense clinical abbreviations (MS → 3 senses),
+   spelling / OCR repair (glued words, stutter, edit distance) — all as *variants*; the original is always kept.
+2. **Retrieve** — char n-gram TF-IDF, BM25, two SapBERT encoders fine-tuned on the coders' own mappings (round 2 with
+   iterative hard negatives), base SapBERT, kNN over training terms; for SNOMED also top-k inside every semantic tag.
+   Gold code is in the candidate pool for ~96% of terms.
+3. **R1** — LightGBM LambdaRank over ~110 features per (term, candidate): retriever scores and ranks, fuzzy similarity,
+   specificity (qualifiers a candidate adds or misses), laterality, ICD structure, SNOMED tag, priors, chunk context.
+4. **R2** — SapBERT cross-encoder reads term + ±120 chars of chunk context with each of the top-30 candidates.
+5. **R2+LLM** — Qwen3-4B-Instruct-2507, QLoRA-fine-tuned on Kaggle GPUs, scores R2's top-10 listwise via letter
+   log-probabilities (one forward pass, deterministic); its scores are features for the final ranker.
+   **R3** (ICD only) — the SNOMED prediction's top-5 informs the ICD decision.
 
-~100 features per (term, candidate): retriever scores and ranks, fuzzy string similarity, specificity
-(extra / missing qualifier words), laterality agreement, ICD code structure (chapter, leaf, "unspecified"),
-SNOMED semantic tag, code/category priors, P(tag | subconcept), and chunk-context features (concept-type classifier
-over term + chunk, chunk-style flags). Then a cross-encoder reads term + chunk context with the top-30 candidates
-(R2), a **fine-tuned LLM reranker** (QLoRA Qwen3-4B-Instruct, trained on cloud GPUs — see `kaggle/`) scores the R2
-top-10 (R2+LLM), and ICD↔SNOMED coupling refines ICD (R3); all rankers are 5-seed bagged LightGBM LambdaRank models.
+All rankers are 5-seed bagged. Details, design decisions and error analysis: the PDF and `docs/WORKLOG.md`.
 
-**LLM component:** the adapter (`models/llm_adapter`, from `kaggle/llm_out/adapter_final.zip`) runs locally in 4-bit
-(2.8 GB VRAM, ~0.4 s/term). Training it reproducibly: `kaggle/README_KAGGLE.md` (5-fold + final, ~6.5 h on 2× T4).
-`run.py train` uses the out-of-fold LLM scores in `kaggle/llm_out/` when present; without them the engine trains and
-runs without the LLM stage (ICD 68.9% / SNOMED 53.8%).
+## Latency and footprint (RTX 3050 Laptop, 4 GB VRAM, 16 GB RAM; both systems per term)
+| | one term at a time: median / p95 | batch (per term) | 3,000-term file |
+|---|---|---|---|
+| without LLM stage (`--no-llm`) | 2.7 s / 3.0 s | ~0.2 s | ~10 min |
+| **final engine (with fine-tuned LLM)** | **3.7 s / 4.4 s** | **~0.85 s** | **~45 min** |
 
-Every number reported is **5-fold cross-validated, grouped by source chunk**, with the encoder fine-tuned
-separately inside each fold, so no evaluation term is ever seen during training.
+Batch mode shares dictionary search and GPU work across terms, so chart-volume files are much cheaper per term than
+single lookups. Prediction runs in two GPU phases (retrieval / cross-encoder / rankers, then the 4-bit LLM alone, 2.8 GB
+VRAM) so everything fits a 4 GB card; files can be split across GPUs. Deterministic: fixed seeds, LightGBM
+deterministic mode, no sampling anywhere.
 
-## Setup
-
-Requirements: Python 3.10+ (developed on 3.13), an NVIDIA GPU with ≥4 GB VRAM recommended (CPU works, slower),
-~8 GB free disk for model weights and embedding caches.
-
-```bash
-python -m venv .venv
-# Windows: .venv\Scripts\activate      Linux/macOS: source .venv/bin/activate
-pip install torch --index-url https://download.pytorch.org/whl/cu128   # or the CPU build
-pip install -r requirements.txt
-```
-
-Place the data files (not committed — proprietary) in the repository root:
-
-| File | Source |
-|---|---|
-| `hackathon_train.csv` | challenge dataset link |
-| `icd10cm_codes.xlsx` | challenge ICD-10-CM dictionary |
-| `SNOMEDCT_US_codes_and_descriptions.xlsx` | challenge SNOMED CT dictionary |
-
-### Environment variables
-Copy `.env.example` to `.env`. Nothing is required; optional: `HF_TOKEN` (Hugging Face rate limits),
-`HF_HOME` (model cache location). No external API is called: all models run locally, so no chart data
-leaves the machine.
-
-## Run
-
-```bash
-# one command: trains everything if needed (resumable), then maps the input file
-# (evaluation set = diagnoses/conditions only → always pass --assume-subconcept DiagnosisCode)
-python run.py all --input eval.csv --output outputs/predictions.csv --assume-subconcept DiagnosisCode
-
-# or separately
-python run.py train
-python run.py predict --input eval.csv --output outputs/predictions.csv --assume-subconcept DiagnosisCode
-```
-
-Accepted input schemas:
-- `chunk_id, clinical_entity[, chunk_text]` → output adds `icd10cm_code, snomed_code` (+ display names and confidence) for every row
-- `entity, chunk_text, coding_system[, subconcept]` (training format) → output adds `code, display, confidence` for the requested system
-
-Each prediction carries:
-- `confidence` — calibrated probability of the chosen code (conf > 0.9 is correct 91% ICD / 96% SNOMED);
-- `alt_code`, `alt_display`, `alt_confidence` — the runner-up candidate;
-- `ambiguous` — the top two are a close call or near-synonyms (for review or set-based scoring);
-- `needs_review` — confidence below `--review-threshold` (default 0.5).
-
-Live demo of hard cases (abbreviation collision, OCR noise, specificity): `python demo.py --cases`.
-
-## Reproducing the submitted predictions
-**A. With the released models (minutes):** download `models.zip` (_link to be added_ — 1.7 GB: bi-encoders,
-cross-encoder, LLM adapter, bagged rankers, context models; too large for GitHub) and unzip it **in the repository
-root** (the archive contains the `models/` folder), then
-```bash
-python run.py predict --input eval.csv --output outputs/predictions.csv --assume-subconcept DiagnosisCode
-```
-**B. From scratch (deterministic, resumable):** `python run.py train` rebuilds every model locally (~8 h on an RTX 3050:
-lexical OOF → two rounds of per-fold encoder fine-tuning → cross-encoder → rankers). The LLM stage uses the committed
-out-of-fold scores in `kaggle/llm_out/llm_scores_f*.csv` and the adapter from the cloud job (`kaggle/README_KAGGLE.md`,
-~6.5 h on Kaggle 2× T4); without them the engine trains and runs without the LLM stage.
-
-## Latency and footprint (RTX 3050 Laptop, 4 GB VRAM, 16 GB RAM)
-| | per term (after ~1 min one-off model load) | 3,000-term file |
-|---|---|---|
-| without LLM stage | ~0.2 s | ~10 min |
-| **final engine (with fine-tuned LLM)** | **~0.85 s** | **~45 min** |
-Prediction runs in two GPU phases (retrieval / cross-encoder / rankers, then the 4-bit LLM alone) so everything fits a
-4 GB card; on a datacenter GPU the LLM step batches far larger. Disk: ~2 GB models + ~6 GB dictionary embedding caches
-(rebuilt automatically on first run). Deterministic: fixed seeds, LightGBM deterministic mode, no sampling anywhere
-(the LLM is read via next-token letter log-probabilities).
+## Reproducing from scratch
+**A. Released models (minutes):** steps 1–5 above (weights pulled from Hugging Face).
+**B. Full retrain (deterministic, resumable):** `python run.py train` (~8 h on an RTX 3050): lexical out-of-fold
+candidates → two rounds of per-fold encoder fine-tuning → cross-encoder → bagged rankers. The LLM stage uses the
+committed out-of-fold LLM scores (`kaggle/llm_out/llm_scores_f*.csv` — row id, code, score; no chart text) and the
+adapter from the cloud job (`kaggle/README_KAGGLE.md`: 5 folds + final, ~6.5 h on Kaggle 2× T4); without them the
+engine trains and runs without the LLM stage. `python run.py all --input test.csv ...` trains if needed, then predicts.
 
 ## Version drift (new ICD-10-CM / SNOMED releases)
-The engine fingerprints the dictionary files (`cache/DICT_VERSION.json`). Replace `icd10cm_codes.xlsx` /
-`SNOMEDCT_US_codes_and_descriptions.xlsx` with a new release and the next run automatically rebuilds every
-dictionary-derived cache (parsed tables, lexical indexes, description embeddings) — new codes are retrievable at once.
-Run `python run.py train` afterwards to refresh the learned conventions; codes retired from the new release are
-dropped from the training memory automatically.
+The engine fingerprints the dictionary files (`cache/DICT_VERSION.json`). Replace the two `.xlsx` files with a new
+release and the next run rebuilds every dictionary-derived cache (parsed tables, lexical indexes, embeddings) — new
+codes are retrievable at once. Run `python run.py train` afterwards to refresh learned conventions. Cache files are
+written atomically, so an interrupted run never leaves a corrupt cache.
 
 ## Repository layout
-
 | Path | Contents |
 |---|---|
-| `run.py` | CLI entry point |
-| `src/dicts.py` | dictionary loading, code metadata (ICD structure, SNOMED semantic tags) |
+| `run.py` | CLI entry point (`train` / `predict` / `all`) |
+| `src/pipeline.py` | training and inference orchestration (`Mapper`) |
+| `src/dicts.py` | dictionary loading, code metadata, version fingerprint |
 | `src/normalize.py`, `src/abbrev.py`, `src/spell.py`, `src/query.py` | normalization and query variants |
-| `src/lexical.py`, `src/encoders.py`, `src/candidates.py` | retrievers |
-| `src/features.py`, `src/engine.py` | candidate table + features |
-| `src/ranker.py`, `src/evaluate.py` | LightGBM LambdaRank reranker, CV evaluation |
-| `src/finetune.py` | contrastive fine-tuning of the bi-encoder |
-| `src/crossenc.py`, `src/coupling.py` | cross-encoder reranker, ICD↔SNOMED coupling |
-| `src/llm.py` | local LLM adjudicator (tested, not in the final pipeline) |
-| `src/pipeline.py` | training and inference orchestration |
-| `experiments/` | every experiment, numbered as in the work log |
-| `results/` | experiment outputs (metrics only) |
-| `docs/WORKLOG.md` | chronological log of all experiments, numbers and decisions |
-| `docs/RESEARCH.md` | related work and what we took from it |
-| `docs/HiLabs_TermMapping_Writeup.pdf` (`docs/build_pdf.py`) | technical write-up |
+| `src/lexical.py`, `src/encoders.py`, `src/candidates.py`, `src/engine.py`, `src/features.py` | retrieval and features |
+| `src/finetune.py` | contrastive fine-tuning of the bi-encoders (iterative hard negatives) |
+| `src/crossenc.py`, `src/context.py`, `src/coupling.py` | cross-encoder, chunk-context features, ICD↔SNOMED coupling |
+| `src/llm_rerank.py` | fine-tuned LLM reranker (local inference) |
+| `src/ranker.py`, `src/cv.py`, `src/evaluate.py` | bagged LambdaRank, grouped folds, evaluation |
+| `src/llm.py` | zero-shot LLM judge (experiment only, not in the final engine) |
+| `kaggle/` | cloud training job for the LLM adapter + out-of-fold LLM scores |
+| `scripts/score.py` | score predictions against a gold file |
+| `scripts/profile_*.py`, `scripts/coverage.py` | data and dictionary profiling |
+| `experiments/`, `results/` | every experiment (numbered as in the work log) and its metrics |
+| `docs/` | write-up PDF (+ `build_pdf.py`), work log, related research, demo script |
 | `demo.py` | interactive / hard-case demo |
 
 ## External resources
-
 | Resource | Use | Licence |
 |---|---|---|
-| SapBERT `cambridgeltl/SapBERT-from-PubMedBERT-fulltext` | bi-encoder (base + fine-tuned) | Apache-2.0 |
-| BioLORD-2023, gte-base, BGE-base, e5-base, MedEmbed, MedCPT | benchmarked, not in final engine | see model cards |
+| SapBERT `cambridgeltl/SapBERT-from-PubMedBERT-fulltext` | bi-encoders (base + fine-tuned), cross-encoder | Apache-2.0 |
 | Qwen3-4B-Instruct-2507 (`unsloth/Qwen3-4B-Instruct-2507-bnb-4bit`) + QLoRA (PEFT, bitsandbytes) | fine-tuned LLM reranker | Apache-2.0 |
+| BioLORD-2023, gte-base, BGE-base, e5-base, MedEmbed, MedCPT | benchmarked, not in the final engine | see model cards |
 | ICD-10-CM and SNOMED CT US dictionaries | supplied by the challenge (answer space) | challenge terms |
 | Clinical abbreviation list (`src/abbrev.py`) | hand-curated from general clinical documentation conventions | — |
-| Python libraries: PyTorch, sentence-transformers, transformers, LightGBM, scikit-learn, RapidFuzz | — | permissive |
-
-## Reproducibility
-Fixed seeds everywhere (`seed=7`, LightGBM `deterministic=True`, fold assignment `seed=13`). Expensive
-artifacts (dictionary embeddings, per-fold candidate tables, models) are cached under `cache/` and `models/`;
-deleting them forces a full rebuild.
+| PyTorch, sentence-transformers, transformers, LightGBM, scikit-learn, RapidFuzz | libraries | permissive |

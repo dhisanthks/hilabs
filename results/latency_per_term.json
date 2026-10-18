@@ -1,0 +1,12 @@
+{
+ "n_terms": 60,
+ "both_systems_per_term": true,
+ "without_llm_s": {
+  "median": 2.654,
+  "p95": 3.016
+ },
+ "with_llm_s": {
+  "median": 3.74,
+  "p95": 4.365
+ }
+}

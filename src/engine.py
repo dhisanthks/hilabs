@@ -13,7 +13,7 @@ import pandas as pd
 import torch
 
 from .candidates import char_knn_features, dense_candidates, knn_features, lexical_candidates, merge
-from .dicts import CACHE, load_system
+from .dicts import CACHE, atomic_save, load_system
 from .features import CodeText, dense_fill, fuzzy_features, query_flags, specificity_features
 from .lexical import LexicalIndex
 from .normalize import clean, clean_desc
@@ -44,7 +44,7 @@ class DenseIndex:
         else:
             t = time.time()
             D = encoder.encode(cs.desc.description.map(clean_desc).tolist(), query=False, batch_size=1024)
-            np.save(path, D)
+            atomic_save(path, lambda f: np.save(f, D))
             log(f"encoded {len(D)} {cs.name} descriptions with {tag} in {time.time() - t:.0f}s")
         self._np = D
         self._gpu = None

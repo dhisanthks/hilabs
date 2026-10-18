@@ -44,6 +44,34 @@ def chunk_flags(chunks: pd.Series, raw: pd.Series) -> pd.DataFrame:
     return out
 
 
+class HashedAnalyzer:
+    """Wraps a fitted vectorizer's analyzer so its vocabulary can be stored as hashes instead of plain chart words
+    (released model files must not contain text from the proprietary training charts). Features are unchanged."""
+
+    def __init__(self, analyzer):
+        self.analyzer = analyzer
+
+    def __call__(self, doc):
+        return [_hash_token(t) for t in self.analyzer(doc)]
+
+
+def _hash_token(t):
+    import hashlib
+    return hashlib.sha256(("hilabs-ctx|" + t).encode("utf-8")).hexdigest()[:16]
+
+
+def hash_vocabulary(vec: TfidfVectorizer) -> TfidfVectorizer:
+    """In place: plain-text vocabulary → hashed vocabulary + hashing analyzer (identical transform output)."""
+    if isinstance(vec.analyzer, HashedAnalyzer):
+        return vec
+    orig = vec.build_analyzer()
+    vec.vocabulary_ = {_hash_token(t): i for t, i in vec.vocabulary_.items()}
+    vec.analyzer = HashedAnalyzer(orig)
+    if hasattr(vec, "stop_words_"):
+        vec.stop_words_ = None
+    return vec
+
+
 class ContextTypeModel:
     """Logistic regression predicting the answer's type from term + chunk (+ subconcept)."""
 
@@ -116,4 +144,6 @@ def fit_full(d: pd.DataFrame, cs, use_sub: bool) -> ContextTypeModel:
     grp = type_of(cs)
     gi = d["code"].map(cs.code_to_idx)
     y = np.where(gi.notna(), grp[gi.fillna(0).astype(int)], "NA")
-    return ContextTypeModel(use_sub).fit(d, y)
+    m = ContextTypeModel(use_sub).fit(d, y)
+    hash_vocabulary(m.v2)   # the saved model must not contain plain chart words
+    return m

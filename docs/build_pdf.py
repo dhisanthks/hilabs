@@ -115,7 +115,6 @@ def build():
         ["Rare or never-seen codes (≤ 2 training examples)", "61.5%", "63.3%"],
         ["Partial credit: ICD 3-character category / SNOMED semantic tag", "81.6%", "84.4%"],
         ["Exact or near-synonym (name similarity ≥ 90)", "74.4%", "73.9%"],
-        ["Most-confident 30% of terms (abstain on the rest)", "96.4%", "95.9%"],
     ], [10.2 * cm, 3.7 * cm, 3.7 * cm]))
 
     s.append(Paragraph("1. Approach — problem and what the data told us", H2))
@@ -189,8 +188,11 @@ def build():
     B("<b>[R3] Independent prediction, then coupling</b> — a learned crosswalk recovers only 37% of ICD codes even from the gold "
       "SNOMED code, so each system is predicted on its own; the other system's top-5 enters R3 as evidence. Kept for ICD, "
       "not for SNOMED (final stage R2+LLM).")
-    B("<b>[Deployment] Deterministic and private</b> — fixed seeds, no sampling; everything runs locally on a 4 GB GPU: ~0.2 s/term "
-      "without the LLM, ~0.85 s/term with it (two-phase inference); dictionary files are fingerprinted for version drift.")
+    B("<b>[Deployment] Deterministic, private, batch-oriented</b> — fixed seeds, no sampling; one command; everything runs locally "
+      "on a 4 GB laptop GPU (RTX 3050). Latency, both systems per term: one term at a time median 3.7 s / p95 4.4 s with the LLM "
+      "(2.7 / 3.0 s without); in batch mode, as a chart pipeline runs, ~0.85 s/term with the LLM (~0.2 s without) because "
+      "dictionary search and GPU work are shared across the batch — ~45 min per 3,000 terms on one laptop GPU, and files can be "
+      "split across GPUs. Dictionary files are fingerprinted for version drift.")
 
     s.append(Paragraph("6. Error analysis, label ambiguity and flagging", H2))
     s.append(table([
@@ -206,14 +208,20 @@ def build():
       "~0.85 inter-annotator agreement of the SNOMED CT Entity Linking Challenge. 20% of SNOMED diagnosis errors are near-synonyms "
       "(<i>Hyperhidrosis</i> vs <i>Diaphoresis</i>); crediting them gives 73.9%. "
       "Twin-preference features and label cleaning could not learn the coders' tie-breaking (±0.2).")
-    B("<b>Hard slices.</b> ICD chapter Z (history/status) 47.5%, T (injury) 51.4%; SNOMED diagnosis terms whose gold is a rare type "
-      "(situation 18.5%, procedure 20.6%); context-dependent abbreviations still fail on ICD (<i>MS</i> in an echo report → multiple "
-      "sclerosis; SNOMED correctly gives mitral valve stenosis).")
+    B("<b>Hard slices</b> (Appendix B): ICD chapters Z 47.5% / T 51.4%; SNOMED gold types situation 18.5% / procedure 20.6%; "
+      "context abbreviations on ICD (<i>MS</i> in an echo report → multiple sclerosis).")
     B("<b>Flagging mechanism.</b> confidence = softmax probability of the chosen code over the final ranker's scores. "
       "<i>needs_review</i> = confidence &lt; 0.5 → flags 30% of SNOMED diagnosis terms, which are only 32.8% correct, while the "
       "unflagged 70% are 82.4% correct. <i>ambiguous</i> = runner-up probability ≥ half the winner's, or runner-up name a "
-      "near-synonym (≥ 90); every row also carries the runner-up code (alt_code). Confidence &gt; 0.9 is right 96.1% (SNOMED dx); "
-      "accuracy at 70% / 50% / 30% coverage: SNOMED dx 82.4 / 90.1 / 95.9%, ICD 85.4 / 92.3 / 96.4%.")
+      "near-synonym (≥ 90); every row also carries the runner-up code (alt_code). Confidence &gt; 0.9 is right 96.1% (SNOMED dx).")
+    B("<b>Coverage / abstention.</b> The engine never leaves a code blank — the headline scores every term and even flagged terms "
+      "are right 32.8% of the time, so abstaining would lower it (70% coverage × 82.4% = 57.7% &lt; 67.4%). Instead the confidence "
+      "column lets a user abstain at any threshold, e.g. send the least-confident 10% or 30% to coders:")
+    s.append(table([
+        ["Terms attempted (most confident first)", "100%", "90%", "70%", "50%", "30%"],
+        ["SNOMED CT (diagnosis) — accuracy on attempted terms", "67.4%", "72.4%", "82.4%", "90.1%", "95.9%"],
+        ["ICD-10-CM — accuracy on attempted terms", "71.1%", "76.3%", "85.4%", "92.3%", "96.4%"],
+    ], [7.6 * cm, 2.0 * cm, 2.0 * cm, 2.0 * cm, 2.0 * cm, 2.0 * cm]))
 
     s.append(Paragraph("7. Core requirement: the seven hard cases", H2))
     s.append(table([
@@ -246,38 +254,35 @@ def build():
         ["Concept-type classifier / two-level type ranker", "type accuracy = R1's own", "dropped"],
         ["Context-kNN; twin / majority-convention features; cleaned labels", "±0.2 (noise)", "dropped"],
         ["Diagnosis-only specialized ranker", "62.9% vs 63.2% (all-rows ranker)", "dropped"],
-        ["Longer encoder training (4 epochs); bigger LightGBM", "±0 / ±1", "harder negatives instead"],
     ], [6.8 * cm, 6.8 * cm, 4.0 * cm])]))
 
     s.append(Paragraph("10. Challenges &amp; learnings", H2))
-    B("<b>The data sets the ceiling:</b> measuring label consistency early would have focused effort sooner.")
-    B("<b>New signals beat new features:</b> fine-tuning, cross-encoder and the fine-tuned LLM gave the gains; eight feature ideas gave ≈ 0.")
-    B("<b>Only trust full 5-fold numbers:</b> a one-fold check overstated the cross-encoder (+3.5 vs +0.6).")
+    B("<b>The data sets the ceiling</b> — measure label consistency first. <b>New signals beat new features</b> — fine-tuning, "
+      "cross-encoder and LLM gave the gains; eight feature ideas gave ≈ 0. <b>Trust only full 5-fold numbers</b> — one fold "
+      "overstated the cross-encoder (+3.5 vs +0.6).")
     B("<b>A 4 GB GPU shaped the engineering:</b> two disk-full incidents (page-file growth), memory-mapped caches, atomic saves, "
       "two-phase inference (5.7 → 0.85 s/term).")
 
     s.append(Paragraph("11. Innovations", H2))
-    s.append(Paragraph("Tag-stratified SNOMED retrieval; iterative hard-negative fine-tuning and a two-round encoder ensemble; "
-                       "explicit specificity features; chunk-context features for the rankers; a cross-encoder trained on the final "
-                       "ranker's own confusions; a listwise QLoRA-tuned LLM reranker read by letter log-probabilities (deterministic, "
-                       "cloud-trained, runs locally); calibrated confidence with review/ambiguity flags and runner-up codes; measured "
-                       "label-consistency ceiling and tolerant metrics; dictionary fingerprinting for version drift.", P))
+    s.append(Paragraph("Tag-stratified SNOMED retrieval; iterative hard-negative fine-tuning (two-round encoder ensemble); explicit "
+                       "specificity features; a listwise QLoRA-tuned LLM reranker read by letter log-probabilities (deterministic, runs "
+                       "locally); calibrated review/ambiguity flags; measured label-consistency ceiling; dictionary fingerprinting.", P))
 
     s.append(Paragraph("12. Future improvements — a plan for the remaining gap, by error bucket", H2))
     s.append(table([
-        ["Remaining SNOMED diagnosis errors (879)", "Next step", "Why it should help"],
-        ["Wrong semantic tag, 39% (mostly disorder ↔ finding twins)",
+        ["SNOMED dx errors (879)", "Next step", "Why it should help"],
+        ["Wrong semantic tag, 39% (disorder ↔ finding)",
          "UMLS/SNOMED licence → IS-A hierarchy; twin-aware features, hierarchical scoring",
-         "many are the same clinical idea under two tags; the hierarchy tells the ranker they are siblings"],
-        ["Same tag, wrong concept, 48% (close candidates; 20% of all errors are near-synonyms)",
+         "often the same clinical idea under two tags"],
+        ["Same tag, wrong concept, 48%",
          "stronger LLM judge (7–8B, more epochs) applied only to the 30% flagged terms",
          "the 4B LLM gave the largest late gain (+3.8); the gold is in the top-10 for 88% of terms"],
         ["Gold never retrieved, 13%",
          "synthetic chart-style training terms for unseen codes (local LLM, no patient data); more retrievers",
          "46% of terms have a gold code never seen in training"],
         ["Label ambiguity (ceiling 84.6%)",
-         "set-based gold for ambiguous terms; published coding conventions; coder feedback (active learning)",
-         "raises the measurable ceiling; flagged terms go to coders, whose decisions become training data"],
+         "set-based gold; published conventions; coder feedback on flagged terms",
+         "raises the measurable ceiling; feedback becomes training data"],
     ], [5.4 * cm, 6.4 * cm, 5.8 * cm]))
 
     s.append(PageBreak())
@@ -289,7 +294,9 @@ def build():
         "as supplied; hand-curated clinical abbreviation list; PyTorch, sentence-transformers, transformers, LightGBM, scikit-learn, "
         "RapidFuzz. Related work: DrivenData SNOMED CT Entity Linking Challenge, n2c2 2019 Track 3, xMEN, MedCAT (docs/RESEARCH.md).", P))
     s.append(Paragraph("<b>Reproduce:</b> see README — <font face='Courier'>python run.py predict --input eval.csv --output "
-                       "predictions.csv --assume-subconcept DiagnosisCode</font> with the released models.", SMALL))
+                       "predictions.csv --assume-subconcept DiagnosisCode</font> (weights pulled automatically from huggingface.co/Dhisanth/hilabs-term-mapping); <b>accuracy:</b> "
+                       "<font face='Courier'>python scripts/score.py --pred outputs/predictions.csv --gold gold.csv</font> "
+                       "(exact match per system + headline).", SMALL))
     s.append(Paragraph("Appendix A — Long-tail generalization (accuracy by gold-code frequency in the training folds)", H2))
     s.append(table([
         ["Gold code seen in training", "ICD share", "ICD accuracy", "SNOMED dx share", "SNOMED dx accuracy"],

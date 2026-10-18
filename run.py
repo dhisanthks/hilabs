@@ -31,6 +31,9 @@ def main():
     ap.add_argument("--assume-subconcept", default=None,
                     help="fill a missing/empty subconcept column, e.g. DiagnosisCode when the input is known to contain "
                          "only diagnoses/conditions (the brief's scope)")
+    ap.add_argument("--no-llm", action="store_true",
+                    help="skip the fine-tuned LLM stage (needs a CUDA GPU; automatic when none is found): faster, ~3-4 "
+                         "points lower accuracy")
     a = ap.parse_args()
     if a.cmd in ("predict", "all") and not a.input:
         ap.error("--input is required")
@@ -40,7 +43,8 @@ def main():
         if a.cmd == "train" or not os.path.exists(os.path.join(pipeline.ART, "ranker_features.json")):
             pipeline.train(a.train)
     if a.cmd in ("predict", "all"):
-        pipeline.predict(a.input, a.output, a.review_threshold, assume_subconcept=a.assume_subconcept)
+        pipeline.predict(a.input, a.output, a.review_threshold, assume_subconcept=a.assume_subconcept,
+                         use_llm=not a.no_llm)
 
 
 if __name__ == "__main__":
