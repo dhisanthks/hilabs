@@ -1,4 +1,4 @@
-"""Build the technical write-up PDF: python docs/build_pdf.py  → docs/HiLabs_TermMapping_Writeup.pdf
+"""Build the technical write-up PDF: python docs/build_pdf.py  → docs/HiLabs_Documentation.pdf
 Numbers live in the RESULTS dict below (all 5-fold cross-validated, see docs/WORKLOG.md)."""
 import os
 
@@ -12,7 +12,7 @@ from reportlab.platypus import (KeepTogether, PageBreak, Paragraph, SimpleDocTem
                                 TableStyle)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "HiLabs_TermMapping_Writeup.pdf")
+OUT = os.path.join(HERE, "HiLabs_Documentation.pdf")
 
 RESULTS = dict(icd=71.1, snomed=58.2, snomed_dx=67.4, icd_dx=71.1,
                icd_unseen=50.1, snomed_unseen=47.0, icd_cat=81.6, icd_chap=89.7, snomed_tag=76.9,
@@ -96,12 +96,12 @@ def build():
     R = RESULTS
     doc = SimpleDocTemplate(OUT, pagesize=A4, leftMargin=1.4 * cm, rightMargin=1.4 * cm, topMargin=1.1 * cm,
                             bottomMargin=1.1 * cm, title="Clinical Term Mapping Engine — Write-up",
-                            author="Team dhisanthks / HiLabs Hackathon 2026")
+                            author="Team DotAI (Dhisanth K S, Srivallabh Manyam, Kaarthik N) / HiLabs Hackathon 2026")
     s = []
     B = lambda txt: s.append(Paragraph("• " + txt, P))
     s.append(Paragraph("Clinical Term Mapping Engine: ICD-10-CM &amp; SNOMED CT", TITLE))
-    s.append(Paragraph(f"HiLabs Hackathon 2026 · technical write-up · demo video: {R['demo_link']} · repo: "
-                       "dhisanthks/hilabs (private)", SUB))
+    s.append(Paragraph("<b>Team DotAI</b> — Dhisanth K S · Srivallabh Manyam · Kaarthik N", SUB))
+    s.append(Paragraph("HiLabs Hackathon 2026 · technical write-up · models: huggingface.co/Dhisanth/hilabs-term-mapping", SUB))
     s.append(Spacer(1, 5))
     s.append(Paragraph("All numbers are 5-fold cross-validated on the training data. The evaluation set contains <b>diagnosis / "
                        "condition terms only</b>, so every SNOMED CT number below is on diagnosis terms (all ICD rows are diagnoses). <b>Headline (the lower of the two "

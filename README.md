@@ -3,7 +3,7 @@
 Maps a clinical entity extracted from a medical chart (plus its chunk context) to an **ICD-10-CM** code and a
 **SNOMED CT US** concept. One command, deterministic, runs locally on a 4 GB laptop GPU — no chart data leaves the machine.
 
-- **Write-up (PDF):** [`docs/HiLabs_TermMapping_Writeup.pdf`](docs/HiLabs_TermMapping_Writeup.pdf)
+- **Write-up (PDF):** [`docs/HiLabs_Documentation.pdf`](docs/HiLabs_Documentation.pdf)
 - **Demo video:** _link to be added_
 - **Trained models (Hugging Face, 1.7 GB):** https://huggingface.co/Dhisanth/hilabs-term-mapping — downloaded automatically on the first run
 - **Full experiment log:** [`docs/WORKLOG.md`](docs/WORKLOG.md)
