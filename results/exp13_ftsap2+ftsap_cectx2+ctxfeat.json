@@ -1,0 +1,48 @@
+{
+ "ICD10CM": {
+  "R1": {
+   "acc": 0.6778,
+   "recall": 0.9584,
+   "acc_seen": 0.7473,
+   "acc_unseen": 0.4554,
+   "acc_given_in_pool": 0.7072
+  },
+  "R2": {
+   "acc": 0.7038,
+   "recall": 0.9584,
+   "acc_seen": 0.7661,
+   "acc_unseen": 0.5046,
+   "acc_given_in_pool": 0.7344
+  },
+  "R3": {
+   "acc": 0.7108,
+   "recall": 0.9584,
+   "acc_seen": 0.7763,
+   "acc_unseen": 0.5009,
+   "acc_given_in_pool": 0.7416
+  }
+ },
+ "SNOMEDCT_US": {
+  "R1": {
+   "acc": 0.5191,
+   "recall": 0.9277,
+   "acc_seen": 0.6237,
+   "acc_unseen": 0.3939,
+   "acc_given_in_pool": 0.5596
+  },
+  "R2": {
+   "acc": 0.5824,
+   "recall": 0.9277,
+   "acc_seen": 0.6767,
+   "acc_unseen": 0.4696,
+   "acc_given_in_pool": 0.6278
+  },
+  "R3": {
+   "acc": 0.5787,
+   "recall": 0.9277,
+   "acc_seen": 0.6722,
+   "acc_unseen": 0.4669,
+   "acc_given_in_pool": 0.6239
+  }
+ }
+}

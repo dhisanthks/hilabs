@@ -1,18 +1,18 @@
 {
- "ICD10CM": {
+ "SNOMEDCT_US": {
   "R1": {
-   "acc": 0.6761,
-   "recall": 0.9584,
-   "acc_seen": 0.749,
-   "acc_unseen": 0.4426,
-   "acc_given_in_pool": 0.7054
+   "acc": 0.5162,
+   "recall": 0.9277,
+   "acc_seen": 0.6167,
+   "acc_unseen": 0.396,
+   "acc_given_in_pool": 0.5565
   },
   "R1_amb": {
-   "acc": 0.6778,
-   "recall": 0.9584,
-   "acc_seen": 0.7496,
-   "acc_unseen": 0.4481,
-   "acc_given_in_pool": 0.7072
+   "acc": 0.5153,
+   "recall": 0.9277,
+   "acc_seen": 0.6144,
+   "acc_unseen": 0.3966,
+   "acc_given_in_pool": 0.5554
   }
  }
 }

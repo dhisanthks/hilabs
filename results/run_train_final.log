@@ -1,0 +1,9 @@
+09:20:46 [1/6] lexical OOF + lexical hard negatives
+09:20:47 [2/6] round-1 fine-tuned candidate tables (lexical negatives)
+09:20:51       round-2 fine-tuned candidate tables (iterative hard negatives)
+09:20:53       chunk-context features (out-of-fold type classifiers + chunk-style flags)
+09:33:59 [3/6] R1 reranker (OOF scores → cross-encoder candidates)
+09:50:49 [4/6] cross-encoder OOF scores (keyed by term id + code)
+09:50:49 [5/6] R2 (+cross-encoder) and R3 (+ICD↔SNOMED coupling)
+10:22:36 [6/6] final bi-encoder and cross-encoder on all training data
+10:22:38 training done in 61.9 min

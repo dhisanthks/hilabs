@@ -1,0 +1,5 @@
+03:35:28 SNOMEDCT_US table (367000, 118)
+03:36:14 SNOMEDCT_US training labels changed by cleaning (summed over folds): 212
+03:40:12 SNOMEDCT_US base            accuracy (original gold): 0.5341
+03:40:12 SNOMEDCT_US clean labels    accuracy (original gold): 0.5345
+03:40:12 SNOMEDCT_US bag5 (seeds)    accuracy (original gold): 0.5394

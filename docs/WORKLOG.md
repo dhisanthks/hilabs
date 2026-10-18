@@ -448,3 +448,249 @@ gap is gold-standard granularity/ambiguity (brief's open question on "genuinely 
 3. **Exp17 — ambiguity features** (twin_n, prior/tag/dense-sim vs best near-synonym twin in R1 top-10; majority share
    among identically-worded training terms, fold-aware). ICD: R1 67.6 → 67.8 (noise). Majority convention covers only
    137 ICD terms; twin_n importance mostly reflects "in R1 top-10". SNOMED run deferred (RAM; CE v2 training).
+
+## Write-up PDF — `docs/HiLabs_TermMapping_Writeup.pdf` (built by `python docs/build_pdf.py`)
+3 pages + appendix: headline metrics (all / diagnosis-only / long tail / partial credit / near-synonym), problem &
+data findings, architecture diagram, accuracy build-up table, design decisions, error analysis (funnel, failure modes,
+type bottleneck, gold ambiguity, hard slices, calibration/abstention), abandoned ideas, innovations, next steps,
+external resources; appendices: funnel table, encoder benchmark, SNOMED accuracy by entity type.
+
+## Exp16 — RESULT: cross-encoder v2 (final-R1 negatives, 2 epochs) + re-stack (`results/exp13_ftsap2+ftsap.json`)
+| | CE alone (top-30) ICD | SNOMED | R2 ICD | R2 SNOMED | **R3 ICD** | **R3 SNOMED** |
+|---|---|---|---|---|---|---|
+| v1 (round-1 negatives, 1 epoch) | 40.6 | 40.1 | 67.6 | 52.4 | 68.3 | 52.2 |
+| **v2** | **48.6** | **42.7** | 68.0 | 53.1 | **68.4** | **53.1** |
+Coverage of final R1 top-30 by v2 scores: 84% (v2 negatives/top-30 came from the exp14 R1 run, which included the
+wRRF feature → slightly different top-30). SNOMED +0.9.
+
+## FINAL MODEL — error analysis (`results/error_analysis_ftsap2+ftsap_final.md`)
+ICD **68.4%** (seen 75.1 / unseen 46.8), category 79.0%, near-synonym 71.8%; errors: miss 96, specificity 233,
+same-chapter 178, wrong chapter 222. SNOMED **53.1%** (seen 63.2 / unseen 41.0), same-name 53.3%, near-synonym 61.2%;
+errors: miss 531, wrong tag 1,518, same-tag 1,394. **SNOMED by entity type: Diagnosis 63.2% | Encounter 53.1% |
+Lab 51.0% | Device 46.5% | Procedure 44.9%.** Calibration conf>0.9: ICD 91.4%, SNOMED 96.1%.
+Coverage→accuracy: ICD 70%→84.0, 50%→90.8, 30%→95.5 | SNOMED 70%→67.4, 50%→76.9, 30%→88.8.
+Pipeline switched to CE v2 (`CE_RUN=cectx2`, 2 epochs); final cross-encoder to be retrained on all data.
+Exp17 SNOMED: 354 terms have identically-worded training terms; 37,654 top-10 candidates have a near-synonym twin.
+R1 51.6 → 51.5% with ambiguity features (noise) → not adopted. Coder tie-breaking between twins is not learnable from
+these signals; ambiguity handled on the output side (alt_code / ambiguous flag) and in reporting (tolerant metrics).
+
+## Full improvement review (2026-10-17 23:50) — what else can raise SNOMED?
+**External data (researched):** COMETA (Reddit → SNOMED, 20k), CADEC (AskaPatient, 6.7k), PsyTAR (6.5k) cover lay
+disorder/ADR terms only — not our weak areas (labs/procedures/devices) nor our coders' conventions; licences need
+requests. Official SNOMED→ICD-10-CM map, SNOMED US Edition (synonyms + IS-A hierarchy) require a UMLS licence
+(approval takes days) → not usable before the deadline; our crosswalk test bounds the map's value (37%).
+**Architecture (researched):** BeLink (2026) and BioNLP-2025 report BERT cross-encoders competitive with GPT-4o
+rerankers; no evidence that small LoRA-tuned LLMs beat them on SNOMED; our Qwen3-4B test agrees. QLoRA on a 4 GB GPU
+would need ~3–4 h per fold → infeasible for honest 5-fold evaluation.
+**Gaps found in our own system:**
+1. The LightGBM rankers see **no chart context** (only the cross-encoder does, and only for the top-30) although the
+   #1 SNOMED error is concept type, which the chunk often reveals (lab tables with units, PT exercise logs, social
+   history). → Exp18: OOF context-type classifier (entity + subconcept + chunk words) + chunk-style flags as features.
+2. The cross-encoder never sees the **entity type** (subconcept) → it cannot learn "lab → measurement procedure".
+   → CE v3: `[subconcept] term | context` queries with 50% subconcept dropout (one model works with/without it),
+   scored both ways; negatives/top-30 from the final R1 (100% coverage, fixes v2's 84%).
+3. CE v2 scores were selected by a slightly different R1 (84% coverage) → v3 uses `stages_final`.
+**Plan:** context test → Exp18 features → re-stack; CE v3 CV (GPU, ~5 h) → re-stack; adopt what wins; final retrain.
+
+## Context signal test (OOF logistic regression predicting SNOMED semantic tag)
+entity 59.6% | entity + subconcept 64.4% | entity + chunk 61.1% | entity + subconcept + chunk 65.1%
+(final ranker's own top-1 tag accuracy 73.2%) → chunk adds ~+0.7–1.5 points of type information; expected gain of
+chunk features in the ranker is small. Exp18 features still evaluated end-to-end (exp13 … ctxfeat).
+
+## Incident (2026-10-18 01:10): final cross-encoder save failed — "not enough space on the disk"
+90-min final CE v2 training completed but `save_pretrained` failed (disk full at that moment; 12 GB free afterwards —
+most likely Windows page-file growth on C: while several RAM-heavy jobs ran concurrently). models/crossencoder was left
+with only config.json → `run.py predict` temporarily broken. Fix: removed the partial model; re-sequenced strictly one
+heavy job at a time: exp13 + context features → `run.py train` (final CE retrain) → CE v3 CV.
+Lesson for deployment: write model artifacts atomically (temp dir + rename) and check free space before saving.
+
+## Exp18 — RESULT: chunk-context features in the full stack (`results/exp13_ftsap2+ftsap_cectx2+ctxfeat.json`)
+| 5-fold CV | R1 | R2 | R3 |
+|---|---|---|---|
+| ICD (before → with context) | 67.6 → 67.8 | 68.0 → 68.7 | 68.4 → **68.9** |
+| SNOMED (before → with context) | 51.6 → 51.9 | 53.1 → **53.8** | 53.1 → 53.6 |
+→ Adopted. SNOMED R3 (coupling) has been ≤ R2 in 3 of the last 4 stacks → **final stage: ICD R3, SNOMED R2**.
+Pipeline: `src/context.py` (type classifiers with/without subconcept, chunk flags), OOF features in training,
+same features at inference; FINAL_STAGE per system; candidate tables freed before final GPU training.
+
+## Incident 2 (02:50): disk at 0 GB during final CE training — page file had grown to 27.7 GB (RAM pressure from the
+training process holding candidate tables + a concurrent experiment). Deleted regenerable caches (final-encoder
+dictionary embeddings, superseded tables) → save succeeded; disk back to 19 GB once the process exited.
+Final cross-encoder v2 saved (87 min). Fix in pipeline: free tables before GPU stage.
+
+## Exp19 — diagnosis-only evaluation scenario (SNOMED, DiagnosisCode terms, 5-fold CV, final features + CE v2, top-50)
+A all rows, subconcept known 63.2% | B all rows, no subconcept 62.6% | C diagnosis rows only 62.9% |
+D all rows, diagnosis ×3 weight 63.4% (noise).
+→ No specialized retrain: the all-rows ranker is best. If the test set is diagnosis-only, run with
+`--assume-subconcept DiagnosisCode` (+0.6 vs. no subconcept).
+
+## Long-tail generalization (judging criterion, 20%) — accuracy by gold-code frequency in the training folds
+(final model incl. context features; honest: every learned component re-trained without the evaluated fold)
+| frequency | ICD share | ICD acc | SNOMED share | SNOMED acc |
+|---|---|---|---|---|
+| absent (0) | 23.8% | 46.8% | 45.5% | 41.8% |
+| rare (1–2) | 24.4% | 69.8% | 31.9% | 57.7% |
+| 3–5 | 21.9% | 78.6% | 15.1% | 69.5% |
+| 6–20 | 29.2% | 78.6% | 7.2% | 76.4% |
+| >20 | 0.7% | 81.2% | 0.3% | 60.0% (n=20) |
+| **rare-or-absent (≤2)** | 48% | **58.4%** | 77% | **48.3%** |
+
+## Decision: fine-tuned LLM reranker — not pursued before the deadline
+Evidence: zero-shot Qwen3-4B fixes 35% of the ranker's recoverable errors (complementary) but literature (BeLink 2026)
+finds BERT cross-encoders competitive with GPT-4o rerankers in biomedicine. On a 4 GB GPU honest 5-fold CV of a
+QLoRA 4B model ≈ 25–40 h (1.7B ≈ 10 h) and inference 10–20× slower. A fold-0 pilot (~2 h) was offered and declined to
+keep GPU time for the final model. → Listed as next step (A100-class GPU; apply only to low-confidence terms).
+
+## Exp20 — countermeasures for label noise and close-call decisions (final features, top-50 pool, original gold)
+| | SNOMED | ICD |
+|---|---|---|
+| current ranker | 53.41 | 68.82 |
+| training on cleaned labels (majority-resolved near-duplicates; 212 / 31 labels changed) | 53.45 (noise) | 68.65 |
+| **5-seed bagged rankers (70% rows / 70% features each)** | **53.94 (+0.53)** | **68.99 (+0.17)** |
+→ Bagging adopted (`ranker.fit_bag`, pipeline saves `<stage>_<system>_<variant>__bag{0..4}.txt`, inference averages);
+label cleaning dropped (evaluation gold is still inconsistent; too few labels change).
+
+## Fine-tuned LLM reranker — cloud GPU job prepared (cloud GPUs approved by organizers)
+`experiments/exp21_make_llm_prompts.py` → `kaggle/data/llm_prompts.jsonl` (9,646 terms; candidates = bagged stack's
+top-10 [ICD top-1 69.0%, gold in top-10 89.8%; SNOMED 53.9% / 81.6%]; 8,061 terms usable for training).
+`kaggle/llm_rerank_kaggle.py`: QLoRA Qwen3-4B-Instruct-2507 (4-bit), listwise cross-entropy over letter logits, candidate
+order shuffled during training (no position bias), 5-fold OOF scores + final adapter, both T4s in parallel, per-fold
+checkpointing. Prompt length median 257 / p95 365 tokens (left truncation for the 0.1% > 640).
+Integration plan: OOF LLM scores → features (llm_lp, llm_rank, llm_gap) in a new stage R2+LLM; adopt only if 5-fold CV
+improves; inference falls back to the current engine if LLM files are absent.
+
+## LLM reranker on Kaggle — smoke tests (fold 0, 200 held-out terms) and launch
+zero-shot (lr 0) 47.0% | after 200 training examples 21.0% (shuffled candidate order removes the position prior before
+content is learned) | **after 1,500 examples 58.5%** (loss 3.53 → 1.27) → learning confirmed.
+Speed on T4: ~17 s per optimizer step (16 examples) → ~2 h per fold. Full run (5 folds + final adapter, 2× T4 in
+parallel, ~6.3 h) launched 05:28 as Kaggle Version #1 (commit run).
+LLM integration prepared: `src/llm_rerank.py` (local scorer with the identical prompt/letter scoring; OOF loader);
+`exp13_stack.py` with `LLM_DIR=kaggle/llm_out` adds the R2+LLM stage and reports LLM-alone / R2+LLM accuracy;
+pipeline: R2+LLM rankers (`r2l_*`, bagged) fitted when the 5 OOF score files exist; inference loads
+`models/llm_adapter` (unzipped adapter_final.zip) and scores the R2 top-10; clear error if trained-with-LLM rankers
+are used without the adapter.
+
+## Exp16b — cross-encoder v3 (subconcept-aware, 50% tag dropout, final-R1 negatives, 100% top-30 coverage)
+CE alone: ICD 48.4% (with tag) / 47.8% (without); SNOMED 42.5% / 42.1% (v2: 48.6 / 42.7).
+Full stack with context features (`results/exp13_ftsap2+ftsap_cectx3*+ctxfeat.json`):
+| | ICD R3 | SNOMED R2 |
+|---|---|---|
+| CE v2 (current) | 68.9 | **53.8** |
+| CE v3, query without subconcept | **69.5** | 53.1 |
+| CE v3, query with subconcept | 68.8 | 53.1 |
+→ v3 helps ICD (+0.6) but hurts SNOMED (−0.7); headline = min(ICD, SNOMED) → **keep v2** for both (no second CE at
+inference). The entity-type tag did not help the cross-encoder resolve SNOMED type confusions.
+Note: exp13 prediction files were named without the cross-encoder run, so the v3 evaluations overwrote the v2+context
+predictions → fixed (names now include the CE run; R2 predictions saved too). Final-model predictions (ICD R3, SNOMED
+R2 = shipped configuration) are regenerated after the final retrain → `cache/pred_FINAL_*`, `results/error_analysis_FINAL.*`.
+Final production retrain started 09:25 (context features + 5-seed bagged R1/R2/R3, CE v2, encoders reused).
+
+## FINAL SHIPPED MODEL — 5-fold CV (`results/error_analysis_FINAL.md`; ICD = R3, SNOMED = R2)
+| | ICD | SNOMED |
+|---|---|---|
+| exact match | **68.9%** | **53.8%** |
+| diagnosis terms | 68.9% | **63.6%** |
+| never-seen / seen codes | 46.8 / 75.8% | 41.8 / 63.7% |
+| rare-or-absent (≤2) | 58.4% | 48.8% |
+| near-synonym credit / ICD category | 71.9 / 78.9% | 61.5% |
+| most-confident 30% / 50% / 70% | 96.0 / 91.7 / 84.3% | 88.0 / 77.2 / 67.8% |
+SNOMED by entity type: Diagnosis 63.6 | Encounter 55.0 | Lab 51.6 | Device 45.8 | Procedure 45.9.
+Shipped rankers are 5-seed bagged (+0.2 / +0.5 measured separately in Exp20, not included above).
+Final production retrain (context + bagging): 62 min → 60 bagged rankers + 3 context models in `models/`.
+
+## Final end-to-end tests (final models, 11:00)
+- Brief schema (`chunk_id, clinical_entity, chunk_text`), 12 hand-written hard cases: 776 s first run (rebuilds final-
+  encoder dictionary caches), 68 s afterwards. Output keeps the input's own columns + icd10cm_/snomed_ code, display,
+  confidence, alt_code, alt_display, ambiguous, needs_review. 10/12 clearly correct (HTN→I10, chronickidney disease
+  stag 3→N18.30, cardiomyopahty→I42.9, diabetes→E11.9, t2dm with diabetic neuropathy→E11.40, left knee pain→M25.562,
+  h/o herpes zoster→Z86.19, pulmonary hypertension→I27.20, copd exacerbation (hcc)→J44.1, sob/doe→R06.02 / Dyspnea on
+  exertion). MS (echo) → multiple sclerosis with low confidence, flagged ambiguous/needs_review, SNOMED runner-up =
+  Mitral valve stenosis. ICD MS → G35.D (2025 code; G35 is the runner-up).
+- Training schema (300 rows): 129 s; `--assume-subconcept DiagnosisCode` mode: 68 s. demo.py --cases: 10 cases OK.
+- Fix: output now preserves the input's column names (was renaming clinical_entity → entity).
+
+## Exp22 — RESULT: fine-tuned LLM reranker (Kaggle 2×T4, QLoRA Qwen3-4B-Instruct-2507) — `results/exp13_llm.log`
+Cloud run: 5 folds × ~108–121 min + final adapter 140 min (6 h 23 min total). LLM alone, held-out folds (mixed
+ICD+SNOMED): 56.1 / 56.6 / 52.8 / 54.7 / 56.6% (mean 55.4%; zero-shot was 47%).
+In the full stack (OOF LLM scores → llm_lp / llm_rank / llm_gap features, new stage R2+LLM; LLM covers 83–84% of
+R2's top-10 because its candidates came from a slightly different ranker):
+| 5-fold CV | R2 | LLM alone | **R2+LLM** | R3 (+coupling) |
+|---|---|---|---|---|
+| ICD | 68.65 | 60.2 | 70.38 | **71.08** |
+| SNOMED | 53.76 | 53.9 | **58.24** | 57.87 |
+→ **Adopted. Final: ICD R3 71.1%, SNOMED R2+LLM 58.2%** (+2.2 / +4.5). Unseen codes: ICD 46.8 → 50.1, SNOMED 41.8 → 47.0.
+Error analysis (`results/error_analysis_FINAL.md`): SNOMED Diagnosis 67.4 | Encounter 59.6 | Lab 55.9 | Device 53.5 |
+Procedure 50.5; near-synonym credit ICD 74.4 / SNOMED 65.6; ICD category 81.6; long tail: never-seen 50.1 / 47.0,
+rare-or-absent 61.5 / 53.7; most-confident 30%: 96.4 / 90.8.
+Local inference: adapter in models/llm_adapter, 4-bit base, 2.8 GB VRAM, 0.41 s/term on the RTX 3050.
+Production rankers refitting with the LLM stage (r2l_*).
+
+## Evaluation scope confirmed: diagnosis/condition terms only
+→ Relevant CV expectation: ICD 71.1%, SNOMED 67.4% (DiagnosisCode terms, final model with LLM); headline ≈ 67%.
+→ Always run with `--assume-subconcept DiagnosisCode` (rankers use P(type|subconcept); the LLM prompt includes the
+entity type and was always trained with one). No diagnosis-specialized retrain (Exp19: all-rows ranker is better).
+README / PDF updated accordingly.
+
+## Production refit with LLM stage — R3-SNOMED OOM → fixed
+`run.py train` fitted R1/R2/R2+LLM (both systems) and R3-ICD (70 bagged files) then ran out of RAM fitting R3 for
+SNOMED (3.2M × 124 float64) — a stage SNOMED does not use (final = R2+LLM). Rebuilt `models/ranker_features.json`
+from the saved boosters' feature names (14 keys); training now skips R3 for systems whose FINAL_STAGE is not r3.
+
+## Exp23 — LLM-2: SNOMED diagnosis-specialist LLM (in progress, ~6 h before deadline)
+Prompts `kaggle/data2/llm2_prompts.jsonl`: 2,700 DiagnosisCode SNOMED terms, top-20 candidates (gold in top-20 90.7%
+vs top-10 88.4%), 2,449 trainable; prompt median 354 / max 575 tokens; 20 letters A–T verified single tokens.
+Script saves per-fold adapters now. Kaggle run (new dataset hilabs-llm2) ~2.5–3 h. Integration prepared: second adapter
+on the same 4-bit base (PEFT multi-adapter), features llm2_lp/rank/gap in SNOMED R2+LLM; exp13 `LLM2_DIR=...` reports
+DiagnosisCode accuracy. Expected gain +0.5–1.5 on SNOMED diagnosis; adopted only if 5-fold CV improves.
+
+## Exp24 — can the LLM's candidate list have higher recall? (SNOMED DiagnosisCode, 5-fold OOF)
+current list ranker (top-1-tuned, bagged) R@10 88.4 / R@20 90.7 | recall-oriented LambdaRank (NDCG@20, truncation 50)
+88.4 / 90.5 | binary objective 88.5 / 90.6 | diverse list (ranker + CE/dense/kNN picks) 87.3 / 90.6;
+ceiling = gold in final-R1 top-50 93.1% (pool 95.9%). → No better list; LLM-2 prompts unchanged. Further recall needs
+better retrieval (encoder/table rebuild, many GPU hours).
+
+## Inference speed fix (two-phase prediction)
+In-pipeline LLM scoring was 5.7 s/term (300 terms in 1,724 s) because encoders, cross-encoder, paged dictionary index,
+coupling name embeddings (0.74 GB) and the 4-bit LLM shared the 4 GB GPU → spill to system RAM. Now: phase A (retrieval,
+CE, R2) for all systems with encoders on GPU; then encoders/CE moved to CPU, name embeddings kept on CPU, LLM loaded
+once, scores every system's top-k (phase B), then unloaded. Measured: 100 terms in 145 s incl. ~60 s model load →
+**~0.85 s/term with the LLM, ~0.2 s/term without** (~45 min per 3,000 terms). demo.py batches all cases in one run.
+
+## Submission audit (judging criteria + requirements)
+Accuracy & long tail: honest 5-fold numbers in PDF/README (+ appendix C long tail). Engineering: single command,
+deterministic, README with setup/env/run, reproduction paths A (released models) and B (from scratch), latency/footprint
+table; LLM OOF score CSVs (no chart text) now committed for reproducibility. Error analysis: PDF §5 + results/*FINAL*.
+PDF: all required sections incl. new "7. Challenges & learnings"; tightened to 3 pages + 1-page appendix.
+Open (user): demo video link (README + PDF), models.zip download link, repo access for judges, push.
+
+## Exp25 — RESULT: LLM-2 (SNOMED diagnosis specialist, top-20, Kaggle 2×T4, 5 folds × ~45 min + final 54 min)
+LLM-2 alone on held-out SNOMED DiagnosisCode terms: 61.5 / 64.1 / 62.7 / 59.4 / 58.5% (mean 61.2%).
+Full stack (`results/exp13_llm2.log`): SNOMED DiagnosisCode 67.44% with LLM-1 + LLM-2 vs **67.44% with LLM-1 only**;
+all SNOMED 58.07 vs 58.24; ICD (via coupling) 71.42 vs 71.08 (noise). → Not adopted (`USE_LLM2 = False`): redundant with
+LLM-1 + stack; top-20 depth adds only 2.3 pts recall and those are the hardest cases; would cost +0.4 s/term.
+Final model unchanged: ICD 71.1%, SNOMED 67.4% (diagnosis terms) / 58.2% (all).
+
+## Version-drift handling (core requirement #7)
+`src/dicts.check_dictionary_version()`: fingerprints the dictionary files (size + mtime) in `cache/DICT_VERSION.json`;
+a changed file invalidates all dictionary-derived caches (parsed tables, *_system.pkl, lexical indexes, vocabulary,
+description embeddings) which rebuild on demand. Previously a new release would have silently reused the old cache.
+
+## Memory fix (prediction on a 16 GB machine)
+Prediction failed with "paging file is too small" when the page file could not grow (disk low): all dictionary
+embedding matrices (~5 GB) were loaded into RAM. DenseIndex and the coupling name embeddings now memory-map the .npy
+caches (read on demand, not committed) → loads fine. Freed disk: removed unused LLM-2 adapters and duplicate LLM-1
+adapter copies (kept score CSVs/logs), old ranker folders, pip cache.
+Extra live demo cases tested: PID→N73.9, acute on chronic systolic chf→I50.23, htn uncontroled→I10, malignant
+hypertension→I10 / SNOMED Malignant hypertension; known failure: RA in "echo: dilated RA" → rheumatoid arthritis.
+
+## Brief's open questions — our evidence-based answers (added to PDF)
+Partial credit: report hierarchical (ICD category 81.6%, SNOMED tag 76.9%) next to exact match. Ambiguous gold: ~20% of
+SNOMED diagnosis errors are near-synonyms → accept sets of valid codes (engine outputs alt_code + ambiguous flag).
+IAA ceiling: 93.7% / 84.6% measured, matching ~0.85 from the SNOMED CT Entity Linking Challenge. Per-category floors
+(final model): ICD chapters 67–82% except Z 47.5% and T 51.4%; SNOMED diagnosis terms disorders 76.1%, findings 68.5%,
+rare gold types (situation 18.5%, procedure 20.6%, qualifier 21.4%, observable 32.7%).
+PDF: 3 pages + appendix page (external resources moved to the appendix page).
+
+## 2026-10-18 ~20:00 — Write-up revised per reviewer comments
+- All SNOMED numbers now diagnosis-only (67.4 exact, 57.4 unseen, 84.4 tag, 73.9 near-synonym, 95.9 @30% coverage); accuracy table completed with diagnosis-only column; bagged-ranker row removed.
+- Added: how models are trained (fine-tuned SapBERT rounds 1/2, LambdaRank retriever weighting, cross-encoder, QLoRA LLM), design decisions tagged by stage, flagging mechanism, 7 failure-mode core-requirement table, open-question answers, label ambiguity, future improvements.

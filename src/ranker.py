@@ -42,3 +42,24 @@ def top1(cand: pd.DataFrame, score_col="score"):
     ex = np.exp(c[score_col] - c.groupby("qid")[score_col].transform("max"))
     first["prob"] = (1.0 / ex.groupby(c["qid"]).sum()).reindex(first.index)
     return first
+
+
+BAG_SEEDS = (7, 11, 23, 41, 97)
+
+
+def fit_bag(cand: pd.DataFrame, feats, seeds=BAG_SEEDS, rounds=600):
+    """Seed-bagged LambdaRank (Exp20: +0.5 SNOMED, +0.2 ICD): each model sees 70% rows / 70% features."""
+    models = []
+    for sd in seeds:
+        m, feats = fit(cand, feats=feats, rounds=rounds,
+                       params=dict(seed=sd, bagging_seed=sd, feature_fraction_seed=sd,
+                                   bagging_fraction=0.7, feature_fraction=0.7))
+        models.append(m)
+    return models, feats
+
+
+def predict_any(models, X):
+    """Average score of a booster or a list of boosters."""
+    if not isinstance(models, (list, tuple)):
+        return models.predict(X, num_threads=8)
+    return np.mean([m.predict(X, num_threads=8) for m in models], axis=0)

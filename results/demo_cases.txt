@@ -1,0 +1,205 @@
+loading models ...
+W1018 15:24:49.934000 32884 .venv\Lib\site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+W1018 15:24:51.800000 32884 .venv\Lib\site-packages\torch\utils\flop_counter.py:29] triton not found; flop counting will not work for triton kernels
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  34%|███▍      | 68/199 [00:00<00:00, 675.51it/s]Loading weights:  68%|██████▊   | 136/199 [00:00<00:00, 591.10it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 815.32it/s]
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  35%|███▌      | 70/199 [00:00<00:00, 677.74it/s]Loading weights:  69%|██████▉   | 138/199 [00:00<00:00, 658.84it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 822.92it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  29%|██▉       | 58/199 [00:00<00:00, 564.97it/s]Loading weights:  58%|█████▊    | 115/199 [00:00<00:00, 523.85it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 873.77it/s]
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights:  40%|███▉      | 80/201 [00:00<00:00, 768.43it/s]Loading weights:  79%|███████▊  | 158/201 [00:00<00:00, 755.23it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 924.82it/s]
+15:25:08 ICD10CM: 10 rows -> 2440 candidates (244/row) retrieval 0s
+15:25:08 ICD10CM: features done 1s, 99 cols
+15:25:50 SNOMEDCT_US: 10 rows -> 5252 candidates (525/row) retrieval 3s
+15:25:53 SNOMEDCT_US: features done 6s, 99 cols
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:   0%|          | 1/398 [00:00<01:51,  3.56it/s]Loading weights:   6%|▋         | 25/398 [00:00<00:04, 80.98it/s]Loading weights:  12%|█▏        | 47/398 [00:00<00:02, 121.26it/s]Loading weights:  18%|█▊        | 70/398 [00:00<00:02, 148.75it/s]Loading weights:  23%|██▎       | 91/398 [00:00<00:01, 166.60it/s]Loading weights:  28%|██▊       | 113/398 [00:00<00:01, 178.03it/s]Loading weights:  34%|███▍      | 135/398 [00:00<00:01, 189.23it/s]Loading weights:  39%|███▉      | 156/398 [00:01<00:01, 192.44it/s]Loading weights:  45%|████▍     | 179/398 [00:01<00:01, 200.52it/s]Loading weights:  51%|█████     | 201/398 [00:01<00:00, 198.89it/s]Loading weights:  56%|█████▌    | 223/398 [00:01<00:00, 202.55it/s]Loading weights:  62%|██████▏   | 245/398 [00:01<00:00, 201.77it/s]Loading weights:  67%|██████▋   | 266/398 [00:01<00:00, 191.36it/s]Loading weights:  72%|███████▏  | 286/398 [00:01<00:00, 188.76it/s]Loading weights:  77%|███████▋  | 306/398 [00:01<00:00, 186.54it/s]Loading weights:  82%|████████▏ | 325/398 [00:01<00:00, 175.65it/s]Loading weights:  86%|████████▌ | 343/398 [00:02<00:00, 167.99it/s]Loading weights:  90%|█████████ | 360/398 [00:02<00:00, 157.25it/s]Loading weights:  94%|█████████▍| 376/398 [00:02<00:00, 146.64it/s]Loading weights:  99%|█████████▊| 393/398 [00:02<00:00, 151.63it/s]Loading weights: 100%|██████████| 398/398 [00:02<00:00, 164.98it/s]
+15:26:08 fine-tuned LLM reranker loaded
+
+====================================================================================================
+TERM: 'HTN'
+CONTEXT: 'pmh: htn, hld, t2dm on metformin'
+normalized query variants: ['htn', 'hypertension']
+
+  ICD10CM      → I10                Essential (primary) hypertension   (confidence 1.00)
+       1.00  I10                hypertension (arterial) (benign) (essential) (malignant) (  ce=  6.23  llm=0.98  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  R03.0              Elevated blood-pressure reading, without diagnosis of hype  ce= -3.09  llm=0.00  via bm25,dense-ft,dense-base,kNN-train
+       0.00  I15.9              Secondary hypertension, unspecified                         ce= -3.78  llm=0.01  via char,bm25,dense-ft,dense-base
+       0.00  I1A                Other hypertension                                          ce= -3.52  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.00  I16.0              Hypertensive urgency                                        ce= -4.69  via char,dense-ft,dense-base
+
+  SNOMEDCT_US  → 38341003           Hypertensive disorder, systemic arterial   (confidence 0.88)
+       0.88  38341003           High blood pressure                                         ce=  5.46  llm=0.86  via char,bm25,dense-ft,dense-base,kNN-train
+       0.11  59621000           Essential hypertension                                      ce=  5.66  llm=0.12  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  24184005           Increased blood pressure                                    ce= -1.05  llm=0.01  via dense-ft,dense-base,kNN-train
+       0.00  161501007          H/O: hypertension                                           ce= -2.71  llm=0.00  via char,dense-ft,dense-base
+       0.00  417312002          Hypertension suspected                                      ce= -5.59  via char,bm25,dense-ft,dense-base
+
+====================================================================================================
+TERM: 'MS'
+CONTEXT: 'neuro: relapsing remitting MS on ocrelizumab, MRI with new lesions'
+normalized query variants: ['ms', 'multiple sclerosis', 'mitral stenosis', 'mental status']
+
+  ICD10CM      → G35                Multiple sclerosis   (confidence 0.73)
+       0.83  G35                Multiple sclerosis                                          ce= -1.30  llm=0.95  via char,bm25,dense-ft,dense-base
+       0.12  G35.D              Multiple sclerosis of brain stem                            ce= -5.76  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.00  G35.A              Exclude1: demyelinating disease of central nervous system,  ce= -4.54  llm=0.01  via char,bm25,dense-ft,dense-base
+       0.00  I34.2              Nonrheumatic mitral (valve) stenosis                        ce= -6.19  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.00  G35.C0             Secondary progressive multiple sclerosis, unspecified       ce= -3.18  llm=0.01  via char,bm25,dense-ft,dense-base
+
+  SNOMEDCT_US  → 24700007           Multiple sclerosis (disorder)   (confidence 0.91)
+       0.91  24700007           Multiple sclerosis                                          ce=  1.13  llm=0.98  via char,bm25,dense-ft,dense-base
+       0.04  36456004           Mental state                                                ce= -5.94  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.01  79619009           Mitral valve stenosis                                       ce= -6.10  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.00  816984002          Chronic progressive multiple sclerosis                      ce= -4.41  llm=0.01  via char,bm25,dense-ft,dense-base
+       0.00  160337009          FH: Multiple sclerosis                                      ce= -6.20  llm=0.01  via char,bm25,dense-ft
+
+====================================================================================================
+TERM: 'MS'
+CONTEXT: 'echo: moderate MS with mean gradient 8 mmHg, LA enlarged'
+normalized query variants: ['ms', 'multiple sclerosis', 'mitral stenosis', 'mental status']
+
+  ICD10CM      → G35.D              Multiple sclerosis of brain stem   (confidence 0.59)
+       0.53  G35.D              Multiple sclerosis of brain stem                            ce= -6.04  llm=0.02  via char,bm25,dense-ft,dense-base
+       0.34  G35                Multiple sclerosis                                          ce= -4.12  llm=0.37  via char,bm25,dense-ft,dense-base
+       0.09  I34.2              Nonrheumatic mitral (valve) stenosis                        ce= -3.44  llm=0.32  via char,bm25,dense-ft,dense-base
+       0.00  I34.0              Nonrheumatic mitral (valve) regurgitation NOS               ce= -2.04  llm=0.02  via bm25,dense-ft,dense-base,kNN-train
+       0.00  I34.9              Nonrheumatic mitral valve disorder, unspecified             ce= -2.54  llm=0.12  via dense-ft
+
+  SNOMEDCT_US  → 79619009           Mitral valve stenosis (disorder)   (confidence 0.77)
+       0.77  79619009           Mitral valve stenosis                                       ce= -2.04  llm=0.92  via char,bm25,dense-ft,dense-base
+       0.14  24700007           Multiple sclerosis                                          ce= -2.09  llm=0.02  via char,bm25,dense-ft,dense-base
+       0.03  36456004           Mental state                                                ce= -6.17  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.00  838448003          Mild mitral valve stenosis                                  ce= -4.41  llm=0.02  via char,dense-ft,dense-base
+       0.00  258697002          Millisecond                                                 ce= -4.81  llm=0.00  via char,dense-ft,dense-base
+
+====================================================================================================
+TERM: 'chronickidney disease stag 3'
+CONTEXT: 'assessment: chronickidney disease stag 3, creatinine 1.6'
+normalized query variants: ['chronickidney disease stag 3', 'chronic kidney disease stag 3']
+
+  ICD10CM      → N18.30             Chronic kidney disease, stage 3 unspecified   (confidence 1.00)
+       1.00  N18.30             Chronic kidney disease, stage 3 unspecified                 ce= -2.39  llm=0.94  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  N18.31             Chronic kidney disease, stage 3a                            ce= -5.09  llm=0.00  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  N18.3              Chronic kidney disease, stage 3 (moderate)                  ce= -2.56  llm=0.05  via char,bm25,dense-ft,dense-base
+       0.00  N18.32             Chronic kidney disease, stage 3b                            ce= -5.26  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.00  N18.9              Diffuse sclerosing glomerulonephritis NOS                   ce= -3.78  llm=0.00  via char,bm25,dense-ft,dense-base,kNN-train
+
+  SNOMEDCT_US  → 433144002          Chronic kidney disease stage 3   (confidence 0.97)
+       0.97  433144002          Chronic kidney disease stage 3                              ce= -2.30  llm=0.99  via char,bm25,dense-ft,dense-base,kNN-train
+       0.01  709044004          Chronic renal impairment                                    ce= -1.45  llm=0.00  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  700378005          Chronic kidney disease stage 3A                             ce= -5.07  llm=0.00  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  433146000          Chronic kidney disease stage 5                              ce= -5.22  via char,bm25,dense-ft,dense-base
+       0.00  431856006          Chronic kidney disease stage 2                              ce= -4.27  llm=0.00  via char,bm25,dense-ft,dense-base
+
+====================================================================================================
+TERM: 'cardiomyopahty'
+CONTEXT: 'hx of ischemic cardiomyopahty, ef 30%'
+normalized query variants: ['cardiomyopahty', 'cardiomyopathy']
+
+  ICD10CM      → I42.9              Cardiomyopathy, unspecified   (confidence 0.92)
+       0.91  I42.9              Cardiomyopathy (primary) (secondary) NOS                    ce=  0.43  llm=0.27  via char,bm25,dense-ft,dense-base,kNN-train
+       0.06  I25.5              Ischemic cardiomyopathy                                     ce=  0.18  llm=0.71  via char,bm25,dense-ft,dense-base
+       0.01  I42                myocardiopathy                                              ce= -3.51  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.01  I42.0              Congestive cardiomyopathy                                   ce= -4.02  llm=0.01  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  I51.9              Heart disease, unspecified                                  ce= -3.81  llm=0.00  via dense-ft,dense-base,kNN-train
+
+  SNOMEDCT_US  → 85898001           Cardiomyopathy   (confidence 0.55)
+       0.55  85898001           Cardiomyopathy                                              ce=  1.25  llm=0.11  via char,bm25,dense-ft,dense-base,kNN-train
+       0.40  194849004          Ischemic cardiomyopathy                                     ce=  0.76  llm=0.89  via char,bm25,dense-ft,dense-base
+       0.02  399020009          Dilated cardiomyopathy                                      ce= -4.45  llm=0.00  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  89461002           Primary cardiomyopathy                                      ce= -4.96  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.00  56265001           Heart disease                                               ce= -4.11  llm=0.00  via dense-ft,dense-base,kNN-train
+
+====================================================================================================
+TERM: 'diabetes'
+CONTEXT: 'a/p: diabetes - continue current regimen'
+normalized query variants: ['diabetes']
+
+  ICD10CM      → E11.9              Type 2 diabetes mellitus without complications   (confidence 0.99)
+       0.98  E11.9              Type 2 diabetes mellitus without complications              ce=  2.25  llm=0.78  via bm25,dense-ft,kNN-train
+       0.01  E11                diabetes (mellitus) due to insulin secretory defect         ce= -5.39  llm=0.01  via char,bm25,dense-ft,dense-base
+       0.00  R73.03             Latent diabetes                                             ce= -3.90  llm=0.01  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  E10.9              Type 1 diabetes mellitus without complications              ce= -4.94  llm=0.17  via bm25,dense-ft,kNN-train
+       0.00  E11.65             Type 2 diabetes mellitus with hyperglycemia                 ce= -0.11  llm=0.01  via bm25,dense-ft,dense-base,kNN-train
+
+  SNOMEDCT_US  → 73211009           Diabetes mellitus   (confidence 0.97)
+       0.97  73211009           Diabetes mellitus                                           ce=  5.66  llm=0.98  via char,bm25,dense-ft,dense-base,kNN-train
+       0.02  44054006           Type 2 diabetes mellitus                                    ce=  2.02  llm=0.01  via char,dense-ft,dense-base,kNN-train
+       0.00  405749004          Newly diagnosed diabetes                                    ce= -3.02  llm=0.00  via dense-ft,dense-base,kNN-train
+       0.00  405751000          Diabetes type                                               ce= -3.38  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.00  161445009          H/O: diabetes mellitus                                      ce= -4.82  llm=0.00  via char,dense-ft,dense-base,kNN-train
+
+====================================================================================================
+TERM: 't2dm with diabetic neuropathy'
+CONTEXT: 'feet: decreased monofilament, t2dm with diabetic neuropathy'
+normalized query variants: ['t2dm with diabetic neuropathy', 'type 2 diabetes mellitus with diabetic neuropathy']
+
+  ICD10CM      → E11.40             Type 2 diabetes mellitus with diabetic neuropathy, unspecified   (confidence 0.99)
+       0.97  E11.40             Type 2 diabetes mellitus with diabetic neuropathy, unspeci  ce=  6.13  llm=0.99  via char,bm25,dense-ft,dense-base,kNN-train
+       0.02  E11.42             Type 2 diabetes mellitus with diabetic polyneuropathy       ce=  1.40  llm=0.01  via char,bm25,dense-ft,dense-base
+       0.00  E13.40             Other specified diabetes mellitus with diabetic neuropathy  ce=  0.48  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.00  E10.40             Type 1 diabetes mellitus with diabetic neuropathy, unspeci  ce= -1.95  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.00  E11.41             Type 2 diabetes mellitus with diabetic mononeuropathy       ce=  0.52  llm=0.00  via char,bm25,dense-ft,dense-base
+
+  SNOMEDCT_US  → 1511000119107      Peripheral neuropathy due to type 2 diabetes mellitus   (confidence 0.37)  ⚠ NEEDS REVIEW
+       0.37  1511000119107      Peripheral neuropathy due to type 2 diabetes mellitus       ce=  0.81  llm=0.17  via char,bm25,dense-ft,dense-base,kNN-train
+       0.29  230572002          Diabetic neuropathy                                         ce=  0.30  llm=0.06  via char,bm25,dense-ft,dense-base,kNN-train
+       0.20  368581000119106    Neuropathy due to type 2 diabetes mellitus                  ce=  1.26  llm=0.59  via char,bm25,dense-ft,dense-base
+       0.05  424736006          Diabetic peripheral neuropathy                              ce= -2.49  llm=0.10  via char,dense-ft,dense-base
+       0.02  44054006           Type 2 diabetes mellitus                                    ce= -0.90  llm=0.03  via char,bm25,kNN-train
+
+====================================================================================================
+TERM: 'left knee pain'
+CONTEXT: 'c/o left knee pain x 2 weeks after fall'
+normalized query variants: ['left knee pain']
+
+  ICD10CM      → M25.562            Pain in left knee   (confidence 1.00)
+       1.00  M25.562            Pain in left knee                                           ce=  5.90  llm=1.00  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  M25.569            Pain in unspecified knee                                    ce= -0.82  llm=0.00  via char,dense-ft,dense-base,kNN-train
+       0.00  M79.605            Pain in left lower limb NOS                                 ce= -4.77  llm=0.00  via char,dense-ft,dense-base,kNN-train
+       0.00  M25.561            Pain in right knee                                          ce= -5.61  llm=0.00  via char,dense-ft,dense-base,kNN-train
+       0.00  M25.56             Pain in knee                                                ce= -2.04  llm=0.00  via char,dense-ft,dense-base
+
+  SNOMEDCT_US  → 468261000124109    Pain of left knee region (finding)   (confidence 0.53)
+       0.53  468261000124109    Pain of left knee region                                    ce=  6.41  llm=0.45  via char,bm25,dense-ft,dense-base
+       0.44  468251000124107    Pain of left knee joint                                     ce=  6.45  llm=0.52  via char,bm25,dense-ft,dense-base,kNN-train
+       0.02  1003722009         Knee pain                                                   ce= -0.27  llm=0.03  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  1003721002         Arthralgia of knee                                          ce= -3.12  llm=0.00  via char,dense-ft,kNN-train
+       0.00  304321000          Decreased range of knee movement                            ce=  —    via kNN-train
+
+====================================================================================================
+TERM: 'h/o herpes zoster'
+CONTEXT: 'past history: h/o herpes zoster 2019'
+normalized query variants: ['h/o herpes zoster', 'history of herpes zoster']
+
+  ICD10CM      → Z86.19             Personal history of other infectious and parasitic diseases   (confidence 0.93)
+       0.90  Z86.19             Personal history of other infectious and parasitic disease  ce= -4.32  llm=0.18  via dense-ft,kNN-train
+       0.02  B02.9              Zoster without complications                                ce= -2.50  llm=0.33  via char,dense-ft,dense-base,kNN-train
+       0.02  Z87.898            Personal history of other specified conditions              ce= -3.78  llm=0.21  via char
+       0.01  Z87.2              Personal history of diseases of the skin and subcutaneous   ce= -5.06  llm=0.17  via dense-ft
+       0.00  Z86.1              Personal history of infectious and parasitic diseases       ce= -3.61  llm=0.10  via dense-ft
+
+  SNOMEDCT_US  → 681221000119108    History of herpes zoster   (confidence 0.98)
+       0.98  681221000119108    History of herpes zoster                                    ce=  0.66  llm=0.98  via char,bm25,dense-ft,dense-base,kNN-train
+       0.01  4740000            Herpes zoster                                               ce= -0.61  llm=0.02  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  16540531000119103  History of ocular zoster                                    ce= -2.15  llm=0.00  via char,dense-ft,dense-base
+       0.00  161423008          H/O: chickenpox                                             ce= -4.70  llm=0.00  via bm25,dense-ft,dense-base
+       0.00  473164004          History of varicella vaccination                            ce= -1.90  llm=0.00  via dense-ft,dense-base
+
+====================================================================================================
+TERM: 'pulmonary hypertension'
+CONTEXT: 'echo: rvsp 55, pulmonary hypertension'
+normalized query variants: ['pulmonary hypertension']
+
+  ICD10CM      → I27.20             Pulmonary hypertension, unspecified   (confidence 1.00)
+       1.00  I27.20             Pulmonary hypertension, unspecified                         ce=  5.35  llm=0.97  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  I27.29             Pulmonary hypertension with unclear multifactorial mechani  ce= -2.62  llm=0.02  via char,bm25,dense-ft,dense-base
+       0.00  I27.0              Idiopathic pulmonary arterial hypertension                  ce= -5.43  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.00  I27.23             Pulmonary hypertension due to lung diseases and hypoxia     ce= -4.38  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.00  I27.22             Pulmonary hypertension due to left heart disease            ce= -4.71  llm=0.00  via char,bm25,dense-ft,dense-base
+
+  SNOMEDCT_US  → 70995007           Pulmonary hypertension   (confidence 0.99)
+       0.99  70995007           Pulmonary hypertension                                      ce=  5.41  llm=0.99  via char,bm25,dense-ft,dense-base,kNN-train
+       0.01  11399002           Pulmonary arterial hypertension                             ce= -4.60  llm=0.01  via char,dense-ft,dense-base
+       0.00  840306007          Mild pulmonary hypertension                                 ce= -5.61  llm=0.00  via char,bm25,dense-ft,dense-base,kNN-train
+       0.00  10964002           Progressive pulmonary hypertension                          ce= -5.15  llm=0.00  via char,bm25,dense-ft,dense-base
+       0.00  840307003          Moderate pulmonary hypertension                             ce= -5.50  llm=0.00  via char,bm25,dense-ft,dense-base,kNN-train

@@ -1,0 +1,115 @@
+﻿03:00:59 fold 0: 7711 groups, 2 epochs
+python.exe : W1018 03:01:07.448000 12512 
+.venv\Lib\site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not 
+supported in Windows or MacOs.
+At line:1 char:586
++ ... train3.log; & .\.venv\Scripts\python.exe -W ignore experiments\exp16_ ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (W1018 03:01:07....ndows or MacOs.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]
+Loading weights:  26%|██▌       | 52/199 [00:00<00:00, 513.96it/s]
+Loading weights:  52%|█████▏    | 104/199 [00:00<00:00, 471.15it/s]
+Loading weights: 100%|██████████| 199/199 [00:00<00:00, 677.47it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.bias   | MISSING | 
+classifier.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your 
+downstream task.
+  ce step 500/2572 loss 1.856
+  ce step 1000/2572 loss 1.957
+  ce step 1500/2572 loss 2.475
+  ce step 2000/2572 loss 0.234
+  ce step 2500/2572 loss 1.103
+04:00:27 fold 1: 7692 groups, 2 epochs
+
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]
+Loading weights:  20%|██        | 40/199 [00:00<00:00, 399.87it/s]
+Loading weights:  40%|████      | 80/199 [00:00<00:00, 373.10it/s]
+Loading weights:  59%|█████▉    | 118/199 [00:00<00:00, 326.67it/s]
+Loading weights: 100%|██████████| 199/199 [00:00<00:00, 550.58it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.bias   | MISSING | 
+classifier.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your 
+downstream task.
+  ce step 500/2564 loss 2.177
+  ce step 1000/2564 loss 1.929
+  ce step 1500/2564 loss 1.307
+  ce step 2000/2564 loss 1.176
+  ce step 2500/2564 loss 0.945
+04:59:25 fold 2: 7791 groups, 2 epochs
+
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]
+Loading weights:  21%|██        | 42/199 [00:00<00:00, 416.46it/s]
+Loading weights:  46%|████▌     | 92/199 [00:00<00:00, 457.17it/s]
+Loading weights:  70%|███████   | 140/199 [00:00<00:00, 465.51it/s]
+Loading weights: 100%|██████████| 199/199 [00:00<00:00, 642.48it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.bias   | MISSING | 
+classifier.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your 
+downstream task.
+  ce step 500/2598 loss 2.308
+  ce step 1000/2598 loss 1.044
+  ce step 1500/2598 loss 1.518
+  ce step 2000/2598 loss 1.762
+  ce step 2500/2598 loss 1.463
+06:17:27 fold 3: 7700 groups, 2 epochs
+
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]
+Loading weights:  22%|██▏       | 43/199 [00:00<00:00, 428.80it/s]
+Loading weights:  44%|████▎     | 87/199 [00:00<00:00, 431.66it/s]
+Loading weights: 100%|██████████| 199/199 [00:00<00:00, 699.71it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.bias   | MISSING | 
+classifier.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your 
+downstream task.
+  ce step 500/2568 loss 2.249
+  ce step 1000/2568 loss 1.942
+  ce step 1500/2568 loss 1.224
+  ce step 2000/2568 loss 1.071
+  ce step 2500/2568 loss 1.668
+07:34:50 fold 4: 7682 groups, 2 epochs
+
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]
+Loading weights:  34%|███▎      | 67/199 [00:00<00:00, 656.07it/s]
+Loading weights:  67%|██████▋   | 133/199 [00:00<00:00, 582.11it/s]
+Loading weights: 100%|██████████| 199/199 [00:00<00:00, 663.62it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.bias   | MISSING | 
+classifier.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your 
+downstream task.
+  ce step 500/2562 loss 1.705
+  ce step 1000/2562 loss 1.447
+  ce step 1500/2562 loss 0.954
+  ce step 2000/2562 loss 0.857
+  ce step 2500/2562 loss 1.244
+08:38:46 ICD10CM cross-encoder (with subconcept) alone acc 0.484
+08:38:46 ICD10CM cross-encoder v2 alone (top-30) acc 0.4779
+08:38:46 SNOMEDCT_US cross-encoder (with subconcept) alone acc 0.4252
+08:38:46 SNOMEDCT_US cross-encoder v2 alone (top-30) acc 0.4208

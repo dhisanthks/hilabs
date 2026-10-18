@@ -24,3 +24,15 @@ __pycache__/
 .vscode/
 .idea/
 scratch/
+kaggle/data/
+kaggle/llm_out/*
+kaggle/llm2_out/*
+*.jsonl
+kaggle/results/
+
+# out-of-fold LLM scores contain no chart text (row id, code, score) — committed so `run.py train` reproduces the LLM stage
+!kaggle/llm_out/llm_scores_f*.csv
+!kaggle/llm2_out/llm_scores_f*.csv
+kaggle/results 2/
+kaggle/llm2_out/adapter_*/
+kaggle/llm2_out/*.zip

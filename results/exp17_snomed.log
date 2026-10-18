@@ -1,0 +1,9 @@
+23:11:04 SNOMEDCT_US terms with identically-worded training terms: 354 | top-10 candidates with a twin: 37654
+23:20:13 SNOMEDCT_US R1 0.5162 | R1 + ambiguity features 0.5153 {'acc': 0.5153, 'recall': 0.9277, 'acc_seen': 0.6144, 'acc_unseen': 0.3966, 'acc_given_in_pool': 0.5554}
+twin_n            513891.0
+prior_vs_twins      1476.0
+tag_vs_twins        2415.0
+ftsim_vs_twins      4467.0
+maj_share            368.0
+maj_n                 43.0
+{'SNOMEDCT_US': {'R1': {'acc': 0.5162, 'recall': 0.9277, 'acc_seen': 0.6167, 'acc_unseen': 0.396, 'acc_given_in_pool': 0.5565}, 'R1_amb': {'acc': 0.5153, 'recall': 0.9277, 'acc_seen': 0.6144, 'acc_unseen': 0.3966, 'acc_given_in_pool': 0.5554}}}

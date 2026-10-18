@@ -40,14 +40,21 @@ class DenseIndex:
         if not cache:
             D = encoder.encode(cs.desc.description.map(clean_desc).tolist(), query=False, batch_size=1024)
         elif os.path.exists(path):
-            D = np.load(path)
+            D = np.load(path, mmap_mode="r")   # memory-mapped: read from disk on demand, not committed to RAM
         else:
             t = time.time()
             D = encoder.encode(cs.desc.description.map(clean_desc).tolist(), query=False, batch_size=1024)
             np.save(path, D)
             log(f"encoded {len(D)} {cs.name} descriptions with {tag} in {time.time() - t:.0f}s")
-        self.D = torch.from_numpy(D)
+        self._np = D
         self._gpu = None
+
+    @property
+    def D(self):
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")   # torch warns that the memmap is read-only; it is never written
+            return torch.from_numpy(np.asarray(self._np))
 
     @property
     def Dt(self):

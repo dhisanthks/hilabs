@@ -1,0 +1,5 @@
+03:01:21 table (367000, 107) | dx terms 2700 | gold in top-50 (dx) 0.9311
+03:03:59 A all rows, subconcept known           SNOMED accuracy on diagnosis terms: 0.6322
+03:03:59 B all rows, no subconcept              SNOMED accuracy on diagnosis terms: 0.6263
+03:03:59 C diagnosis rows only                  SNOMED accuracy on diagnosis terms: 0.6289
+03:03:59 D all rows, diagnosis x3 weight        SNOMED accuracy on diagnosis terms: 0.6337

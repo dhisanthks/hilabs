@@ -21,6 +21,35 @@ SYSTEMS = ("ICD10CM", "SNOMEDCT_US")
 _TAG_RE = re.compile(r"\(([^()]+)\)\s*$")
 
 
+_DICT_DERIVED = ("icd.parquet", "snomed.parquet", "ICD10CM_system.pkl", "SNOMEDCT_US_system.pkl", "vocab.pkl",
+                 "lex_char_ICD10CM.pkl", "lex_char_SNOMEDCT_US.pkl", "lex_bm25_ICD10CM.pkl", "lex_bm25_SNOMEDCT_US.pkl")
+_version_checked = False
+
+
+def check_dictionary_version():
+    """Version drift: fingerprint the supplied dictionary files (size + mtime). If they changed since the caches were
+    built (e.g. a new ICD-10-CM October release or SNOMED biannual release is dropped in), every dictionary-derived
+    cache (parsed tables, lexical indexes, vocabulary, description embeddings) is invalidated and rebuilt on demand."""
+    global _version_checked
+    if _version_checked:
+        return
+    _version_checked = True
+    import glob
+    import json
+    os.makedirs(CACHE, exist_ok=True)
+    sig = {os.path.basename(f): [os.path.getsize(f), int(os.path.getmtime(f))]
+           for f in (ICD_XLSX, SNOMED_XLSX) if os.path.exists(f)}
+    stamp = os.path.join(CACHE, "DICT_VERSION.json")
+    old = json.load(open(stamp)) if os.path.exists(stamp) else None
+    if old is not None and old != sig:
+        stale = [os.path.join(CACHE, f) for f in _DICT_DERIVED] + glob.glob(os.path.join(CACHE, "emb_*.npy"))
+        for f in stale:
+            if os.path.exists(f):
+                os.remove(f)
+        print(f"[dicts] dictionary files changed {old} -> {sig}: rebuilt dictionary-derived caches", flush=True)
+    json.dump(sig, open(stamp, "w"))
+
+
 def _load_raw(system: str) -> pd.DataFrame:
     os.makedirs(CACHE, exist_ok=True)
     pq = os.path.join(CACHE, "icd.parquet" if system == "ICD10CM" else "snomed.parquet")
@@ -89,6 +118,7 @@ def _icd_meta(codes: np.ndarray, names: np.ndarray) -> pd.DataFrame:
 
 
 def load_system(system: str) -> CodeSystem:
+    check_dictionary_version()
     pkl = os.path.join(CACHE, f"{system}_system.pkl")
     if os.path.exists(pkl):
         return pd.read_pickle(pkl)

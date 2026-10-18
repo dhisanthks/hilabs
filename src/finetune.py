@@ -69,8 +69,13 @@ def finetune(base: str, pairs, out_dir=None, epochs=2, batch_size=64, lr=2e-5, s
         logging_steps=50, report_to=[], batch_sampler="no_duplicates", dataloader_num_workers=0)
     trainer = SentenceTransformerTrainer(model=model, args=args, train_dataset=ds, loss=loss)
     trainer.train()
-    if out_dir:
-        model.save(out_dir)
+    if out_dir:   # atomic save (temp dir + rename)
+        import os, shutil
+        tmp = out_dir + ".tmp"
+        shutil.rmtree(tmp, ignore_errors=True)
+        model.save(tmp)
+        shutil.rmtree(out_dir, ignore_errors=True)
+        os.replace(tmp, out_dir)
     return model
 
 

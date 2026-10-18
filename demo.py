@@ -32,31 +32,34 @@ HARD_CASES = [
 ]
 
 
-def show(m, entity, chunk, k=5):
-    q = pd.DataFrame({"entity": [entity], "chunk_text": [chunk]})
-    print("\n" + "=" * 100)
-    print(f"TERM: {entity!r}")
-    if chunk:
-        print(f"CONTEXT: {chunk[:120]!r}")
-    print(f"normalized query variants: {variants(entity)}")
-    st = {}
-    for s in SYSTEMS:
-        cand, _ = m.stage12(q, s)
-        cand["mention_id"] = 0
-        st[s] = cand
-    res = m.run(q, {s: np.array([0]) for s in SYSTEMS})
-    for s in SYSTEMS:
-        r = res[s].iloc[0]
-        flag = "  ⚠ NEEDS REVIEW" if r.confidence < 0.5 else ""
-        print(f"\n  {s:12s} → {r.code:18s} {r.display}   (confidence {r.confidence:.2f}){flag}")
-        c = st[s].sort_values("prob", ascending=False).head(k)
-        cs = m.engines[s].cs
-        for _, row in c.iterrows():
-            src = [n for n, col in (("char", "char_rank"), ("bm25", "bm25_rank"), ("dense-ft", "dense_ft_rank"),
-                                   ("dense-base", "dense_base_rank"), ("kNN-train", "knn_ft_rank"))
-                   if col in row and row[col] < 50]
-            print(f"      {row.prob:5.2f}  {cs.codes[int(row.code_idx)]:18s} {str(cs.name_of[int(row.code_idx)])[:60]:60s}"
-                  f"  ce={row.ce:6.2f}  via {','.join(src)}")
+def show_batch(m, cases, k=5, subconcept="DiagnosisCode"):
+    """Map all (entity, chunk) cases in ONE engine run (models and the LLM load once), then print each."""
+    # the evaluation set is diagnoses/conditions only → same entity type as `run.py --assume-subconcept DiagnosisCode`
+    q = pd.DataFrame({"entity": [e for e, _ in cases], "chunk_text": [c for _, c in cases],
+                      "subconcept": [subconcept] * len(cases)})
+    rows = np.arange(len(q))
+    res = m.run(q, {s: rows for s in SYSTEMS})
+    for i, (entity, chunk) in enumerate(cases):
+        print("\n" + "=" * 100)
+        print(f"TERM: {entity!r}")
+        if chunk:
+            print(f"CONTEXT: {chunk[:120]!r}")
+        print(f"normalized query variants: {variants(entity)}")
+        for s in SYSTEMS:
+            r = res[s].loc[i]
+            flag = "  ⚠ NEEDS REVIEW" if r.confidence < 0.5 else ""
+            print(f"\n  {s:12s} → {r.code:18s} {r.display}   (confidence {r.confidence:.2f}){flag}")
+            c = m.last_cands[s]
+            c = c[c.qid == i].sort_values("prob", ascending=False).head(k)
+            cs = m.engines[s].cs
+            for _, row in c.iterrows():
+                src = [n for n, col in (("char", "char_rank"), ("bm25", "bm25_rank"), ("dense-ft", "dense_ft_rank"),
+                                       ("dense-base", "dense_base_rank"), ("kNN-train", "knn_ft_rank"))
+                       if col in row and row[col] < 50]
+                ce_txt = f"ce={row.ce:6.2f}" if row.ce == row.ce else "ce=  —  "
+                llm_txt = (f"  llm={np.exp(row.llm_lp):4.2f}" if "llm_lp" in row and row.llm_lp == row.llm_lp else "")
+                print(f"      {row.prob:5.2f}  {cs.codes[int(row.code_idx)]:18s} {str(cs.name_of[int(row.code_idx)])[:58]:58s}"
+                      f"  {ce_txt}{llm_txt}  via {','.join(src)}")
 
 
 def main():
@@ -67,8 +70,7 @@ def main():
     print("loading models ...")
     m = Mapper()
     if a.cases:
-        for e, c in HARD_CASES:
-            show(m, e, c)
+        show_batch(m, HARD_CASES)
         return
     while True:
         try:
@@ -76,7 +78,7 @@ def main():
             if not e:
                 break
             c = input("chunk context (optional)> ").strip()
-            show(m, e, c)
+            show_batch(m, [(e, c)])
         except (EOFError, KeyboardInterrupt):
             break
 

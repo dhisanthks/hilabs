@@ -17,6 +17,8 @@ ap = argparse.ArgumentParser()
 ap.add_argument('name', nargs='?', default='cectx2'); ap.add_argument('--epochs', type=int, default=2)
 ap.add_argument('--neg', type=int, default=9); ap.add_argument('--max-len', type=int, default=96)
 ap.add_argument('--topk', type=int, default=30); ap.add_argument('--gpb', type=int, default=6)
+ap.add_argument('--stages', default='stages', help='candidate ranks file prefix (stages | stages_final)')
+ap.add_argument('--sub-dropout', type=float, default=None, help='include [subconcept] in queries; drop it with this prob during training')
 a = ap.parse_args()
 
 df = load_train(); df['fold'] = assign_folds(df)
@@ -24,9 +26,10 @@ X = {}
 for s in SYSTEMS:
     d = df[df.coding_system == s].reset_index(drop=True)
     cs = load_system(s)
-    st = pd.read_parquet(os.path.join(CACHE, f'stages_{s}.parquet'), columns=['qid', 'code_idx', 'label', 'fold', 'r1'])
+    st = pd.read_parquet(os.path.join(CACHE, f'{a.stages}_{s}.parquet'), columns=['qid', 'code_idx', 'label', 'fold', 'r1'])
     X[s] = dict(d=d, cs=cs, st=st[st.r1 < max(a.topk, a.neg + 5)],
                 q=[make_query(clean(e), None, context_window(e, c)) for e, c in zip(d.entity, d.chunk_text)],
+                qs=[make_query(clean(e), sc, context_window(e, c)) for e, c, sc in zip(d.entity, d.chunk_text, d.subconcept)],
                 gold=d.code.map(cs.code_to_idx).fillna(-1).astype(int).to_numpy())
 parts = {s: [] for s in SYSTEMS}
 for f in range(N_FOLDS):
@@ -36,25 +39,37 @@ for f in range(N_FOLDS):
             parts[s].append(pd.read_parquet(part_path[s]))
         continue
     groups = []
+    rng = np.random.RandomState(100 + f)
     for s, x in X.items():
         st, d = x['st'], x['d']
         negs = st[(st.fold != f) & (st.label == 0)].sort_values(['qid', 'r1']).groupby('qid').code_idx.apply(list)
         for qi in np.where((d.fold != f).to_numpy() & (x['gold'] >= 0))[0]:
             ng = negs.get(qi, [])[:a.neg]
             if ng:
-                groups.append((x['q'][qi], [cand_text(x['cs'], x['gold'][qi])] + [cand_text(x['cs'], k) for k in ng]))
+                use_sub = a.sub_dropout is not None and rng.random() >= a.sub_dropout
+                qtext = x['qs'][qi] if use_sub else x['q'][qi]
+                groups.append((qtext, [cand_text(x['cs'], x['gold'][qi])] + [cand_text(x['cs'], k) for k in ng]))
     log(f'fold {f}: {len(groups)} groups, {a.epochs} epochs')
     ce = CrossEncoder('sapbert', max_len=a.max_len).fit(groups, epochs=a.epochs, group_size=a.neg + 1,
                                                         groups_per_batch=a.gpb, log_every=500)
     for s, x in X.items():
         te = x['st'][(x['st'].fold == f) & (x['st'].r1 < a.topk)]
-        sc = ce.score([x['q'][i] for i in te.qid], [cand_text(x['cs'], k) for k in te.code_idx])
+        ctexts = [cand_text(x['cs'], k) for k in te.code_idx]
+        sc = ce.score([x['q'][i] for i in te.qid], ctexts)
         p = te[['qid', 'code_idx', 'fold']].assign(ce=sc)
+        if a.sub_dropout is not None:   # second scoring pass with the subconcept tag in the query
+            p['ce_sub'] = ce.score([x['qs'][i] for i in te.qid], ctexts)
         p.to_parquet(part_path[s]); parts[s].append(p)
     del ce; gc.collect(); torch.cuda.empty_cache()
 for s in SYSTEMS:
     k = pd.concat(parts[s], ignore_index=True)
-    k.to_parquet(os.path.join(CACHE, f'ce_scores_{a.name}_{s}.parquet'))
+    k.drop(columns=['ce_sub'], errors='ignore').to_parquet(os.path.join(CACHE, f'ce_scores_{a.name}_{s}.parquet'))
+    if 'ce_sub' in k:   # with-subconcept scores as their own score table
+        k.drop(columns=['ce']).rename(columns={'ce_sub': 'ce'}).to_parquet(os.path.join(CACHE, f'ce_scores_{a.name}sub_{s}.parquet'))
+        ks = k.drop(columns=['ce']).rename(columns={'ce_sub': 'ce'})
+        st0 = X[s]['st']; ms = st0[st0.r1 < a.topk].merge(ks, on=['qid', 'code_idx'])
+        tops = ms.sort_values(['qid', 'ce'], ascending=[True, False]).groupby('qid').head(1)
+        log(s, 'cross-encoder (with subconcept) alone acc', round(float(tops.label.sum() / len(X[s]['d'])), 4))
     st = X[s]['st']; m = st[st.r1 < a.topk].merge(k, on=['qid', 'code_idx'])
     top = m.sort_values(['qid', 'ce'], ascending=[True, False]).groupby('qid').head(1)
     log(s, 'cross-encoder v2 alone (top-30) acc', round(float(top.label.sum() / len(X[s]['d'])), 4))

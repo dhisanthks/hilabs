@@ -31,3 +31,17 @@ Survey done during development (2026-10-17) to check our design against similar 
 - https://hackmd.io/@w-is-h/rJdNvgpFK (MedCAT v2 design notes)
 - https://arxiv.org/pdf/2407.12849
 - https://www.medrxiv.org/content/10.1101/2024.10.15.24315526.full.pdf
+
+## Final check (2026-10-18) — can diagnosis-term SNOMED accuracy still be raised?
+- SNOMED CT Entity Linking Challenge: mean inter-annotator Jaccard ≈ 0.85 on concept assignment — matches our measured
+  84.6% label self-consistency (an external confirmation of the practical ceiling). https://pmc.ncbi.nlm.nih.gov/articles/PMC12361850/
+- SapBERT bi-encoder study (2024): F1 disorder 0.87 vs finding 0.76 vs observable 0.73 — findings are intrinsically harder;
+  SNOMED's editorial guide makes disorders a subtype of findings (source of disorder↔finding confusions).
+  https://journals.sagepub.com/doi/full/10.1177/20552076241288681 ·
+  https://docs.snomed.org/snomed-ct-specifications/snomed-ct-editorial-guide/readme/authoring/domain-specific-modeling/clinical-finding-and-disorder
+- Two-stage LLM pipelines are reported robust to annotation ambiguity (https://pubmed.ncbi.nlm.nih.gov/42174981/) — consistent
+  with our fine-tuned LLM reranker giving the largest late gain.
+Our diagnosis-term error anatomy (final model, 879 errors): not retrieved 13%; disorder↔finding 13%; other type 35%;
+near-synonym of gold 20%; gold at R1 rank 11–100 (outside the LLM's top-10) 22%; 62% of errors already flagged (conf<0.5).
+Next steps ranked: (1) LLM over top-20 candidates and save per-fold adapters (needed to produce honest OOF features for
+any change in k); (2) 2 epochs / 7–8B model; (3) second LLM family for an ensemble; (4) UMLS licence → SNOMED hierarchy.

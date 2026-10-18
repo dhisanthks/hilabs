@@ -1,0 +1,51 @@
+﻿01:33:49 [1/6] lexical OOF + lexical hard negatives
+01:33:50 [2/6] round-1 fine-tuned candidate tables (lexical negatives)
+01:33:53       round-2 fine-tuned candidate tables (iterative hard negatives)
+01:33:55 [3/6] R1 reranker (OOF scores → cross-encoder candidates)
+01:41:52 [4/6] cross-encoder OOF scores (keyed by term id + code)
+01:41:52 [5/6] R2 (+cross-encoder) and R3 (+ICD↔SNOMED coupling)
+01:56:14 [6/6] final bi-encoder and cross-encoder on all training data
+python.exe : W1018 01:56:25.989000 18276 
+.venv\Lib\site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not 
+supported in Windows or MacOs.
+At line:1 char:517
++ ... FFERED="1"; & .\.venv\Scripts\python.exe run.py train *> results\run_ ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (W1018 01:56:25....ndows or MacOs.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]
+Loading weights:  25%|██▌       | 50/199 [00:00<00:00, 490.35it/s]
+Loading weights:  97%|█████████▋| 193/199 [00:00<00:00, 1038.53it/s]
+Loading weights: 100%|██████████| 199/199 [00:00<00:00, 983.37it/s] 
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.bias   | MISSING | 
+classifier.weight | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your 
+downstream task.
+  ce step 200/3216 loss 2.197
+  ce step 400/3216 loss 2.386
+  ce step 600/3216 loss 1.859
+  ce step 800/3216 loss 1.573
+  ce step 1000/3216 loss 1.623
+  ce step 1200/3216 loss 1.298
+  ce step 1400/3216 loss 1.972
+  ce step 1600/3216 loss 1.426
+  ce step 1800/3216 loss 2.363
+  ce step 2000/3216 loss 1.501
+  ce step 2200/3216 loss 2.038
+  ce step 2400/3216 loss 0.971
+  ce step 2600/3216 loss 1.173
+  ce step 2800/3216 loss 0.903
+  ce step 3000/3216 loss 0.854
+  ce step 3200/3216 loss 0.938
+
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]
+Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  1.84it/s]
+Writing model shards: 100%|██████████| 1/1 [00:00<00:00,  1.83it/s]
+03:00:48 training done in 87.0 min

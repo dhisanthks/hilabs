@@ -1,0 +1,16 @@
+{
+ "A current (top-1 tuned, bagged)": {
+  "@10": 0.8844,
+  "@20": 0.907
+ },
+ "B recall-oriented LambdaRank": {
+  "@10": 0.8837,
+  "@20": 0.9052
+ },
+ "B2 binary objective": {
+  "@10": 0.8848,
+  "@20": 0.9056
+ },
+ "C diverse list (K=10)": 0.873,
+ "C diverse list (K=20)": 0.9063
+}

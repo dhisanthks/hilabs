@@ -1,0 +1,90 @@
+10:22:45 ICD10CM added 7 round-1 encoder features; coverage 0.878
+10:22:46 ICD10CM added extra features ctxfeat 13
+10:23:39 ICD10CM R1 {'acc': 0.6778, 'recall': 0.9584, 'acc_seen': 0.7473, 'acc_unseen': 0.4554, 'acc_given_in_pool': 0.7072}
+10:23:40 ICD10CM CE coverage of R1 top-30: 0.815
+10:24:32 ICD10CM R2 (+CE) {'acc': 0.6865, 'recall': 0.9584, 'acc_seen': 0.7536, 'acc_unseen': 0.4718, 'acc_given_in_pool': 0.7163}
+10:24:35 SNOMEDCT_US added 8 round-1 encoder features; coverage 0.816
+10:24:36 SNOMEDCT_US added extra features ctxfeat 13
+10:29:13 SNOMEDCT_US R1 {'acc': 0.5191, 'recall': 0.9277, 'acc_seen': 0.6237, 'acc_unseen': 0.3939, 'acc_given_in_pool': 0.5596}
+10:29:17 SNOMEDCT_US CE coverage of R1 top-30: 0.815
+10:33:34 SNOMEDCT_US R2 (+CE) {'acc': 0.5376, 'recall': 0.9277, 'acc_seen': 0.6372, 'acc_unseen': 0.4184, 'acc_given_in_pool': 0.5795}
+10:35:44 ICD10CM R3 (+coupling) {'acc': 0.6891, 'recall': 0.9584, 'acc_seen': 0.7581, 'acc_unseen': 0.4681, 'acc_given_in_pool': 0.719}
+r1                   205407.0
+ce_gap                18144.0
+ce_rank               16155.0
+dense_ft_sim_gap       5150.0
+ce                     4077.0
+cp_cooc_w              2399.0
+dense_ft1_sim_gap      2062.0
+char_sim_gap           1580.0
+cp_sim                 1472.0
+knn_ft1_rank           1447.0
+dense_ft1_rank         1421.0
+c_chapter              1322.0
+fz_ratio               1276.0
+p_type_ctx             1230.0
+cp_sim_w               1227.0
+10:42:38 SNOMEDCT_US R3 (+coupling) {'acc': 0.5358, 'recall': 0.9277, 'acc_seen': 0.6344, 'acc_unseen': 0.4178, 'acc_given_in_pool': 0.5776}
+r1                    650912.0
+ce_gap                155907.0
+ce                     15063.0
+dense_ft_sim_gap       13113.0
+ce_rank                10928.0
+c_tag                   6161.0
+dense_ft_rank           5861.0
+dense_ft1_sim_gap       5475.0
+p_type_ctx              4800.0
+char_sim_gap            4677.0
+dense_base_sim_gap      4099.0
+dense_ft_sim            3800.0
+dense_ft1_sim           3676.0
+fz_ratio                3569.0
+fz_tsort                3356.0
+{
+ "ICD10CM": {
+  "R1": {
+   "acc": 0.6778,
+   "recall": 0.9584,
+   "acc_seen": 0.7473,
+   "acc_unseen": 0.4554,
+   "acc_given_in_pool": 0.7072
+  },
+  "R2": {
+   "acc": 0.6865,
+   "recall": 0.9584,
+   "acc_seen": 0.7536,
+   "acc_unseen": 0.4718,
+   "acc_given_in_pool": 0.7163
+  },
+  "R3": {
+   "acc": 0.6891,
+   "recall": 0.9584,
+   "acc_seen": 0.7581,
+   "acc_unseen": 0.4681,
+   "acc_given_in_pool": 0.719
+  }
+ },
+ "SNOMEDCT_US": {
+  "R1": {
+   "acc": 0.5191,
+   "recall": 0.9277,
+   "acc_seen": 0.6237,
+   "acc_unseen": 0.3939,
+   "acc_given_in_pool": 0.5596
+  },
+  "R2": {
+   "acc": 0.5376,
+   "recall": 0.9277,
+   "acc_seen": 0.6372,
+   "acc_unseen": 0.4184,
+   "acc_given_in_pool": 0.5795
+  },
+  "R3": {
+   "acc": 0.5358,
+   "recall": 0.9277,
+   "acc_seen": 0.6344,
+   "acc_unseen": 0.4178,
+   "acc_given_in_pool": 0.5776
+  }
+ }
+}

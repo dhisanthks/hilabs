@@ -1,0 +1,3 @@
+04:11:13 ICD10CM stack top-1 0.6899 | gold in top-10 0.8977
+04:15:19 SNOMEDCT_US stack top-1 0.5394 | gold in top-10 0.8162
+04:15:24 wrote 9646 records to C:\Users\dhisa\OneDrive\Desktop\hilabs\kaggle\data\llm_prompts.jsonl

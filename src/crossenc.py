@@ -7,6 +7,7 @@ and a short context window; the candidate string carries the code's display name
 from __future__ import annotations
 
 import math
+import os
 import random
 
 import numpy as np
@@ -86,7 +87,13 @@ class CrossEncoder:
         return out
 
     def save(self, path):
-        self.model.save_pretrained(path); self.tok.save_pretrained(path)
+        """Atomic save: write to <path>.tmp, then rename — a failed save never leaves a half-written model."""
+        import shutil
+        tmp = path + ".tmp"
+        shutil.rmtree(tmp, ignore_errors=True)
+        self.model.save_pretrained(tmp); self.tok.save_pretrained(tmp)
+        shutil.rmtree(path, ignore_errors=True)
+        os.replace(tmp, path)
 
 
 def make_query(entity, subconcept=None, context=None):

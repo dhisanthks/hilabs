@@ -14,3 +14,5 @@ openpyxl==3.1.5
 RapidFuzz==3.14.6
 Unidecode==1.4.0
 tqdm==4.70.1
+bitsandbytes==0.50.2
+peft==0.21.2

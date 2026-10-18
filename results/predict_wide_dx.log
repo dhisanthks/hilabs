@@ -1,0 +1,11 @@
+10:59:05 subconcept assumed = DiagnosisCode where missing
+W1018 10:59:11.231000 22880 .venv\Lib\site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  28%|██▊       | 55/199 [00:00<00:00, 548.00it/s]Loading weights:  55%|█████▌    | 110/199 [00:00<00:00, 544.33it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 961.26it/s]
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  32%|███▏      | 64/199 [00:00<00:00, 609.78it/s]Loading weights:  63%|██████▎   | 125/199 [00:00<00:00, 601.97it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 946.18it/s]
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  36%|███▌      | 71/199 [00:00<00:00, 700.88it/s]Loading weights:  97%|█████████▋| 193/199 [00:00<00:00, 1004.56it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 986.39it/s] 
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights:  36%|███▋      | 73/201 [00:00<00:00, 695.93it/s]Loading weights:  71%|███████   | 143/201 [00:00<00:00, 584.85it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 834.85it/s]
+10:59:28 ICD10CM: 12 rows -> 3029 candidates (252/row) retrieval 1s
+10:59:29 ICD10CM: features done 2s, 99 cols
+11:00:07 SNOMEDCT_US: 12 rows -> 6331 candidates (528/row) retrieval 3s
+11:00:10 SNOMEDCT_US: features done 6s, 99 cols
+11:00:13 wrote 12 rows to outputs/sample_wide_pred_dx.csv in 68s

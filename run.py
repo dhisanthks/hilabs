@@ -28,6 +28,9 @@ def main():
     ap.add_argument("--input", help="file to map")
     ap.add_argument("--output", default="outputs/predictions.csv")
     ap.add_argument("--review-threshold", type=float, default=0.5)
+    ap.add_argument("--assume-subconcept", default=None,
+                    help="fill a missing/empty subconcept column, e.g. DiagnosisCode when the input is known to contain "
+                         "only diagnoses/conditions (the brief's scope)")
     a = ap.parse_args()
     if a.cmd in ("predict", "all") and not a.input:
         ap.error("--input is required")
@@ -37,7 +40,7 @@ def main():
         if a.cmd == "train" or not os.path.exists(os.path.join(pipeline.ART, "ranker_features.json")):
             pipeline.train(a.train)
     if a.cmd in ("predict", "all"):
-        pipeline.predict(a.input, a.output, a.review_threshold)
+        pipeline.predict(a.input, a.output, a.review_threshold, assume_subconcept=a.assume_subconcept)
 
 
 if __name__ == "__main__":

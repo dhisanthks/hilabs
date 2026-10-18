@@ -1,0 +1,5 @@
+03:40:36 ICD10CM table (115300, 118)
+03:40:58 ICD10CM training labels changed by cleaning (summed over folds): 31
+03:43:08 ICD10CM base            accuracy (original gold): 0.6882
+03:43:08 ICD10CM clean labels    accuracy (original gold): 0.6865
+03:43:08 ICD10CM bag5 (seeds)    accuracy (original gold): 0.6899

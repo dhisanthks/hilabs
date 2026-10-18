@@ -1,0 +1,66 @@
+13:06:10 [1/6] lexical OOF + lexical hard negatives
+13:06:12 [2/6] round-1 fine-tuned candidate tables (lexical negatives)
+13:06:15       round-2 fine-tuned candidate tables (iterative hard negatives)
+13:06:18       chunk-context features (out-of-fold type classifiers + chunk-style flags)
+13:09:08 [3/6] R1 reranker (OOF scores → cross-encoder candidates)
+13:26:43 [4/6] cross-encoder OOF scores (keyed by term id + code)
+13:26:43 [5/6] R2 (+cross-encoder) and R3 (+ICD↔SNOMED coupling)
+13:32:20       ICD10CM: R2+LLM stage fitted (LLM scores from C:\Users\dhisa\OneDrive\Desktop\hilabs\kaggle\llm_out)
+14:09:37       SNOMEDCT_US: R2+LLM stage fitted (LLM scores from C:\Users\dhisa\OneDrive\Desktop\hilabs\kaggle\llm_out)
+Traceback (most recent call last):
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\run.py", line 47, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\run.py", line 41, in main
+    pipeline.train(a.train)
+    ~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\src\pipeline.py", line 300, in train
+    ms, fts = ranker.fit_bag(c, feats=fts)
+              ~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\src\ranker.py", line 54, in fit_bag
+    m, feats = fit(cand, feats=feats, rounds=rounds,
+               ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                   params=dict(seed=sd, bagging_seed=sd, feature_fraction_seed=sd,
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                               bagging_fraction=0.7, feature_fraction=0.7))
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\src\ranker.py", line 27, in fit
+    model = lgb.train(p, ds, num_boost_round=rounds)
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\.venv\Lib\site-packages\lightgbm\engine.py", line 296, in train
+    booster = Booster(params=params, train_set=train_set)
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\.venv\Lib\site-packages\lightgbm\basic.py", line 3758, in __init__
+    train_set.construct()
+    ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\.venv\Lib\site-packages\lightgbm\basic.py", line 2574, in construct
+    self._lazy_init(
+    ~~~~~~~~~~~~~~~^
+        data=self.data,
+        ^^^^^^^^^^^^^^^
+    ...<9 lines>...
+        position=self.position,
+        ^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\.venv\Lib\site-packages\lightgbm\basic.py", line 2101, in _lazy_init
+    data, feature_name, categorical_feature, self.pandas_categorical = _data_from_pandas(
+                                                                       ~~~~~~~~~~~~~~~~~^
+        data=data,
+        ^^^^^^^^^^
+    ...<2 lines>...
+        pandas_categorical=self.pandas_categorical,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\.venv\Lib\site-packages\lightgbm\basic.py", line 795, in _data_from_pandas
+    _pandas_to_numpy(data, target_dtype=target_dtype),
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\.venv\Lib\site-packages\lightgbm\basic.py", line 742, in _pandas_to_numpy
+    return data.to_numpy(dtype=target_dtype, copy=False)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\.venv\Lib\site-packages\pandas\core\frame.py", line 2081, in to_numpy
+    result = self._mgr.as_array(dtype=dtype, copy=copy, na_value=na_value)
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\.venv\Lib\site-packages\pandas\core\internals\managers.py", line 1885, in as_array
+    arr = self._interleave(dtype=dtype, na_value=na_value)
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\.venv\Lib\site-packages\pandas\core\internals\managers.py", line 1918, in _interleave
+    result = np.empty(self.shape, dtype=dtype)
+numpy._core._exceptions._ArrayMemoryError: Unable to allocate 2.94 GiB for an array with shape (124, 3180580) and data type float64

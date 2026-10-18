@@ -1,0 +1,80 @@
+W1018 19:31:36.372000 15212 .venv\Lib\site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+W1018 19:31:38.262000 15212 .venv\Lib\site-packages\torch\utils\flop_counter.py:29] triton not found; flop counting will not work for triton kernels
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  34%|███▎      | 67/199 [00:00<00:00, 668.41it/s]Loading weights:  67%|██████▋   | 134/199 [00:00<00:00, 623.41it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 918.94it/s]
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  40%|████      | 80/199 [00:00<00:00, 785.07it/s]Loading weights:  80%|███████▉  | 159/199 [00:00<00:00, 736.97it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 919.08it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  29%|██▉       | 58/199 [00:00<00:00, 573.66it/s]Loading weights:  58%|█████▊    | 116/199 [00:00<00:00, 488.53it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 837.92it/s]
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights:  20%|██        | 41/201 [00:00<00:00, 405.57it/s]Loading weights:  44%|████▍     | 88/201 [00:00<00:00, 443.17it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 807.01it/s]
+19:31:56 ICD10CM: 6 rows -> 1472 candidates (245/row) retrieval 1s
+19:31:57 ICD10CM: features done 2s, 99 cols
+19:32:39 SNOMEDCT_US: 6 rows -> 3032 candidates (505/row) retrieval 5s
+19:32:42 SNOMEDCT_US: features done 8s, 99 cols
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:   0%|          | 1/398 [00:00<02:32,  2.60it/s]Loading weights:   6%|▌         | 22/398 [00:00<00:06, 58.31it/s]Loading weights:   9%|▉         | 37/398 [00:00<00:04, 83.63it/s]Loading weights:  14%|█▍        | 56/398 [00:00<00:03, 110.72it/s]Loading weights:  19%|█▊        | 74/398 [00:00<00:02, 130.14it/s]Loading weights:  23%|██▎       | 93/398 [00:00<00:02, 144.60it/s]Loading weights:  28%|██▊       | 111/398 [00:01<00:01, 148.18it/s]Loading weights:  33%|███▎      | 132/398 [00:01<00:01, 163.95it/s]Loading weights:  38%|███▊      | 150/398 [00:01<00:01, 160.69it/s]Loading weights:  42%|████▏     | 167/398 [00:01<00:01, 147.79it/s]Loading weights:  46%|████▋     | 185/398 [00:01<00:01, 151.54it/s]Loading weights:  51%|█████     | 201/398 [00:01<00:01, 136.14it/s]Loading weights:  55%|█████▍    | 218/398 [00:01<00:01, 143.58it/s]Loading weights:  59%|█████▊    | 233/398 [00:01<00:01, 132.03it/s]Loading weights:  63%|██████▎   | 250/398 [00:01<00:01, 136.06it/s]Loading weights:  66%|██████▋   | 264/398 [00:02<00:01, 130.19it/s]Loading weights:  70%|██████▉   | 278/398 [00:02<00:00, 127.89it/s]Loading weights:  74%|███████▍  | 294/398 [00:02<00:00, 136.05it/s]Loading weights:  77%|███████▋  | 308/398 [00:02<00:00, 129.69it/s]Loading weights:  81%|████████  | 322/398 [00:02<00:00, 123.16it/s]Loading weights:  84%|████████▍ | 335/398 [00:02<00:00, 124.83it/s]Loading weights:  88%|████████▊ | 350/398 [00:02<00:00, 131.55it/s]Loading weights:  91%|█████████▏| 364/398 [00:02<00:00, 127.93it/s]Loading weights:  95%|█████████▍| 377/398 [00:03<00:00, 126.90it/s]Loading weights:  98%|█████████▊| 390/398 [00:03<00:00, 111.06it/s]Loading weights: 100%|██████████| 398/398 [00:03<00:00, 125.79it/s]
+19:32:53 fine-tuned LLM reranker loaded
+
+====================================================================================================
+TERM: 'RA'
+CONTEXT: 'hands: symmetric joint swelling, positive rheumatoid factor, on methotrexate for RA'
+normalized query variants: ['ra', 'rheumatoid arthritis', 'right atrium']
+
+  ICD10CM      → M06.9              Rheumatoid arthritis, unspecified   (confidence 0.92)
+       0.92  M06.9              Rheumatoid arthritis, unspecified                           ce=  4.29  llm=0.66  via char,bm25,dense-ft,dense-base
+
+  SNOMEDCT_US  → 69896004           Rheumatoid arthritis (disorder)   (confidence 0.94)
+       0.94  69896004           Rheumatoid arthritis                                        ce=  3.87  llm=0.92  via char,bm25,dense-ft,dense-base
+
+====================================================================================================
+TERM: 'RA'
+CONTEXT: 'echo: dilated RA, tricuspid regurgitation moderate'
+normalized query variants: ['ra', 'rheumatoid arthritis', 'right atrium']
+
+  ICD10CM      → M06.9              Rheumatoid arthritis, unspecified   (confidence 0.92)
+       0.91  M06.9              Rheumatoid arthritis, unspecified                           ce= -5.75  llm=0.63  via char,bm25,dense-ft,dense-base
+
+  SNOMEDCT_US  → 69896004           Rheumatoid arthritis (disorder)   (confidence 0.57)
+       0.57  69896004           Rheumatoid arthritis                                        ce= -5.79  llm=0.37  via char,bm25,dense-ft,dense-base
+
+====================================================================================================
+TERM: 'PID'
+CONTEXT: 'gyn: lower abdominal pain, cervical motion tenderness, treated for PID'
+normalized query variants: ['pid', 'pelvic inflammatory disease', 'prolapsed intervertebral disc']
+
+  ICD10CM      → N73.9              Female pelvic inflammatory disease, unspecified   (confidence 0.99)
+       0.99  N73.9              Female pelvic inflammatory disease, unspecified             ce=  0.42  llm=0.97  via char,bm25,dense-ft,dense-base
+
+  SNOMEDCT_US  → 198130006          Female pelvic inflammatory disease (disorder)   (confidence 0.87)
+       0.87  198130006          Pelvic inflammatory disease                                 ce=  1.95  llm=0.97  via char,bm25,dense-ft,dense-base
+
+====================================================================================================
+TERM: 'htn uncontroled'
+CONTEXT: 'a/p: htn uncontroled, increase lisinopril'
+normalized query variants: ['htn uncontroled', 'hypertension uncontroled', 'htn uncontrolled', 'hypertension uncontrolled']
+
+  ICD10CM      → I10                Essential (primary) hypertension   (confidence 0.97)
+       0.96  I10                hypertension (arterial) (benign) (essential) (malignant) (  ce=  0.23  llm=0.95  via char,bm25,dense-ft,dense-base,kNN-train
+
+  SNOMEDCT_US  → 38341003           Hypertensive disorder, systemic arterial   (confidence 0.47)  ⚠ NEEDS REVIEW
+       0.47  38341003           High blood pressure                                         ce=  0.61  llm=0.13  via char,bm25,dense-ft,dense-base,kNN-train
+
+====================================================================================================
+TERM: 'malignant hypertension'
+CONTEXT: 'bp 230/130 with papilledema, malignant hypertension'
+normalized query variants: ['malignant hypertension']
+
+  ICD10CM      → I10                Essential (primary) hypertension   (confidence 0.99)
+       0.99  I10                hypertension (arterial) (benign) (essential) (malignant) (  ce=  0.65  llm=0.67  via char,bm25,dense-ft,dense-base,kNN-train
+
+  SNOMEDCT_US  → 70272006           Malignant hypertension (disorder)   (confidence 0.96)
+       0.96  70272006           Malignant hypertension                                      ce=  6.38  llm=0.99  via char,bm25,dense-ft,dense-base
+
+====================================================================================================
+TERM: 'acute on chronic systolic chf'
+CONTEXT: 'admitted with acute on chronic systolic chf exacerbation'
+normalized query variants: ['acute on chronic systolic chf', 'acute on chronic systolic congestive heart failure']
+
+  ICD10CM      → I50.23             Acute on chronic systolic (congestive) heart failure   (confidence 0.99)
+       0.99  I50.23             Acute on chronic systolic (congestive) heart failure        ce=  6.46  llm=0.98  via char,bm25,dense-ft,dense-base,kNN-train
+
+  SNOMEDCT_US  → 443253003          Acute on chronic systolic heart failure   (confidence 0.98)
+       0.98  443253003          Acute on chronic systolic heart failure                     ce=  6.51  llm=0.97  via char,bm25,dense-ft,dense-base,kNN-train

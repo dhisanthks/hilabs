@@ -33,10 +33,16 @@ from .normalize import clean, clean_desc
 ART = os.path.join(ROOT, "models")
 RUN1 = "ftsap"     # round-1 OOF candidate tables (experiments/exp05_finetune_cv.py)
 RUN = "ftsap2"     # round-2 OOF tables: fine-tuned with iterative hard negatives mined from RUN1
-CE_RUN = "cectx"   # OOF cross-encoder score name shared with experiments/exp07_crossenc_cv.py
+CE_RUN = "cectx2"  # OOF cross-encoder scores (experiments/exp16_crossenc_v2.py): negatives from final R1, 2 epochs
 BASE = "sapbert"
-CE_CFG = dict(max_len=96, neg=9, gpb=6, epochs=1, topk=30)
-SUB_FEATS = ("p_grp_sub", "subconcept")
+CE_CFG = dict(max_len=96, neg=9, gpb=6, epochs=2, topk=30)
+LLM_OOF_DIR = os.path.join(ROOT, "kaggle", "llm_out")      # out-of-fold LLM scores from the cloud job (optional)
+LLM_TOPK = 10
+LLM2_OOF_DIR = os.path.join(ROOT, "kaggle", "llm2_out")    # SNOMED diagnosis-specialist LLM (top-20)
+USE_LLM2 = False   # Exp25: no gain on SNOMED diagnosis terms (67.44% with and without) → disabled
+LLM2_TOPK = 20
+SUB_FEATS = ("p_grp_sub", "subconcept", "p_type_ctx", "type_ctx_top")
+FINAL_STAGE = {"ICD10CM": "r3", "SNOMEDCT_US": "r2"}   # chosen by 5-fold CV (coupling helps ICD, not SNOMED)
 CE_FEATS = ["ce", "ce_rank", "ce_gap", "r1"]
 CP_FEATS = ["cp_cooc", "cp_cooc_w", "cp_has", "cp_sim", "cp_sim_w"]
 
@@ -90,7 +96,10 @@ def _name_emb(cs):
         enc = Encoder(BASE)
         np.save(path, enc.encode([clean_desc(str(x)) for x in cs.name_of], query=False, batch_size=1024))
         del enc; torch.cuda.empty_cache()
-    return torch.from_numpy(np.load(path)).to("cuda" if torch.cuda.is_available() else "cpu")
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return torch.from_numpy(np.load(path, mmap_mode="r")).to("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # ============================================================================ training
@@ -189,6 +198,24 @@ def train(train_csv=None, epochs=2):
         r1f = round1[s][["qid", "code_idx"] + cols].rename(columns={c: c.replace("_ft_", "_ft1_") for c in cols})
         oof[s] = oof[s].merge(r1f, on=["qid", "code_idx"], how="left")
     del round1; gc.collect()
+    log("      chunk-context features (out-of-fold type classifiers + chunk-style flags)")
+    from . import context as ctxm
+    import pickle
+    for s in SYSTEMS:
+        d = df[df.coding_system == s].reset_index(drop=True)
+        cs = load_system(s)
+        flags = ctxm.chunk_flags(d.chunk_text, d.chunk_text)
+        P = {}
+        for v in (("sub", "nosub") if s == "SNOMEDCT_US" else ("nosub",)):
+            path = os.path.join(CACHE, f"ctxprobs_{s}_{v}.npy")
+            if not os.path.exists(path):
+                np.save(path, ctxm.oof_probs(d, cs, v == "sub", N_FOLDS))
+            P[v] = np.load(path)
+            pickle.dump(ctxm.fit_full(d, cs, v == "sub"), open(os.path.join(ART, f"ctx_{s}_{v}.pkl"), "wb"))
+        f_ns = ctxm.features_for(oof[s], P["nosub"], flags, cs)
+        f_s = ctxm.features_for(oof[s], P.get("sub", P["nosub"]), flags, cs)[["p_type_ctx", "type_ctx_top"]]
+        f_ns = f_ns.rename(columns={"p_type_ctx": "p_type_ctx_ns", "type_ctx_top": "type_ctx_top_ns"})
+        oof[s] = pd.concat([oof[s], f_s, f_ns], axis=1)
     X, meta = {}, {}
     log("[3/6] R1 reranker (OOF scores → cross-encoder candidates)")
     for s in SYSTEMS:
@@ -207,8 +234,10 @@ def train(train_csv=None, epochs=2):
         cand["r1"] = cand.groupby("qid").cumcount().astype(np.int16)
         f1 = ranker.feature_cols(cand.drop(columns=["r1"]))
         for v, fts in (("sub", f1), ("nosub", [f for f in f1 if f not in SUB_FEATS])):
-            m, fts = ranker.fit(cand, feats=fts)
-            m.save_model(os.path.join(ART, f"r1_{s}_{v}.txt")); meta[f"r1_{s}_{v}"] = fts
+            ms, fts = ranker.fit_bag(cand, feats=fts)
+            for i, m in enumerate(ms):
+                m.save_model(os.path.join(ART, f"r1_{s}_{v}__bag{i}.txt"))
+            meta[f"r1_{s}_{v}"] = fts
         X[s] = dict(d=d, cs=cs, cand=cand.drop(columns=["score"]),
                     q=_ce_queries(d.entity, d.chunk_text),
                     gold=d.code.map(cs.code_to_idx).fillna(-1).astype(int).to_numpy())
@@ -240,8 +269,30 @@ def train(train_csv=None, epochs=2):
         c["mention_id"] = x["d"].mention_id.to_numpy()[c.qid.to_numpy()]
         f2 = ranker.feature_cols(c.drop(columns=["prob", "mention_id"]))
         for v, fts in (("sub", f2), ("nosub", [f for f in f2 if f not in SUB_FEATS])):
-            m, fts = ranker.fit(c.drop(columns=["prob", "mention_id"]), feats=fts)
-            m.save_model(os.path.join(ART, f"r2_{s}_{v}.txt")); meta[f"r2_{s}_{v}"] = fts
+            ms, fts = ranker.fit_bag(c.drop(columns=["prob", "mention_id"]), feats=fts)
+            for i, m in enumerate(ms):
+                m.save_model(os.path.join(ART, f"r2_{s}_{v}__bag{i}.txt"))
+            meta[f"r2_{s}_{v}"] = fts
+        if all(os.path.exists(os.path.join(LLM_OOF_DIR, f"llm_scores_f{f}.csv")) for f in range(N_FOLDS)):
+            from .llm_rerank import add_llm_feats, load_oof_scores
+            ls_ = load_oof_scores(LLM_OOF_DIR, s, x["cs"].code_to_idx)
+            lp = c[["qid", "code_idx"]].merge(ls_, on=["qid", "code_idx"], how="left")["llm_lp"].to_numpy()
+            c = add_llm_feats(c.drop(columns=["prob"]), lp)
+            if USE_LLM2 and s == "SNOMEDCT_US" and all(os.path.exists(os.path.join(LLM2_OOF_DIR, f"llm_scores_f{f}.csv"))
+                                          for f in range(N_FOLDS)):
+                ls2 = load_oof_scores(LLM2_OOF_DIR, s, x["cs"].code_to_idx)
+                lp2 = c[["qid", "code_idx"]].merge(ls2, on=["qid", "code_idx"], how="left")["llm_lp"].to_numpy()
+                c = add_llm_feats(c, lp2, prefix="llm2")
+                log(f"      {s}: + LLM-2 (diagnosis specialist, top-{LLM2_TOPK}) features")
+            _, _, _, _, c2 = cv_rerank(c.drop(columns=["mention_id"]), x["d"])
+            c["prob"] = _probs(c2)
+            fl = ranker.feature_cols(c.drop(columns=["prob", "mention_id"]))
+            for v, fts in (("sub", fl), ("nosub", [f for f in fl if f not in SUB_FEATS])):
+                ms, fts = ranker.fit_bag(c.drop(columns=["prob", "mention_id"]), feats=fts)
+                for i, m in enumerate(ms):
+                    m.save_model(os.path.join(ART, f"r2l_{s}_{v}__bag{i}.txt"))
+                meta[f"r2l_{s}_{v}"] = fts
+            log(f"      {s}: R2+LLM stage fitted (LLM scores from {LLM_OOF_DIR})")
         tops[s] = c.sort_values(["qid", "prob"], ascending=[True, False]).groupby("qid").head(5)[
             ["mention_id", "code_idx", "prob", "fold"]]
         x["cand"] = c
@@ -251,6 +302,8 @@ def train(train_csv=None, epochs=2):
     pairs.drop(columns=["fold"]).to_csv(os.path.join(ART, "pairs.csv"), index=False)
     emb = {s: _name_emb(X[s]["cs"]) for s in SYSTEMS}
     for s, x in X.items():
+        if FINAL_STAGE.get(s, "r3") != "r3":   # this system's final decision is R2 / R2+LLM — no R3 needed
+            continue
         o = [t for t in SYSTEMS if t != s][0]
         c = x["cand"]
         feats = [coupling_features(c[c.fold == f], s, tops[o][tops[o].fold == f], x["cs"], X[o]["cs"],
@@ -258,17 +311,20 @@ def train(train_csv=None, epochs=2):
         c = c.join(pd.concat(feats)).drop(columns=["prob", "mention_id"])
         f3 = ranker.feature_cols(c)
         for v, fts in (("sub", f3), ("nosub", [f for f in f3 if f not in SUB_FEATS])):
-            m, fts = ranker.fit(c, feats=fts)
-            m.save_model(os.path.join(ART, f"r3_{s}_{v}.txt")); meta[f"r3_{s}_{v}"] = fts
+            ms, fts = ranker.fit_bag(c, feats=fts)
+            for i, m in enumerate(ms):
+                m.save_model(os.path.join(ART, f"r3_{s}_{v}__bag{i}.txt"))
+            meta[f"r3_{s}_{v}"] = fts
     json.dump(meta, open(os.path.join(ART, "ranker_features.json"), "w"), indent=1)
     log("[6/6] final bi-encoder and cross-encoder on all training data")
+    ce_groups = _ce_groups(X, lambda t: np.ones(len(t), bool), CE_CFG["neg"])
+    del X, oof, tops, c; gc.collect()   # free the candidate tables before GPU training (RAM / page-file growth)
     if not os.path.exists(os.path.join(ART, "biencoder_r1", "config.json")):
         finetune(BASE, build_pairs(df, hard), out_dir=os.path.join(ART, "biencoder_r1"), epochs=epochs)
     if not os.path.exists(os.path.join(ART, "biencoder", "config.json")):
         finetune(BASE, build_pairs_multi(df, hard_multi), out_dir=os.path.join(ART, "biencoder"), epochs=epochs)
     if not os.path.exists(os.path.join(ART, "crossencoder", "config.json")):
-        groups = _ce_groups(X, lambda t: np.ones(len(t), bool), CE_CFG["neg"])
-        ce = CrossEncoder(BASE, max_len=CE_CFG["max_len"]).fit(groups, epochs=CE_CFG["epochs"],
+        ce = CrossEncoder(BASE, max_len=CE_CFG["max_len"]).fit(ce_groups, epochs=CE_CFG["epochs"],
                                                                group_size=CE_CFG["neg"] + 1, groups_per_batch=CE_CFG["gpb"])
         ce.save(os.path.join(ART, "crossencoder"))
     log(f"training done in {(time.time() - t0) / 60:.1f} min")
@@ -300,10 +356,32 @@ class Mapper:
                     "base": Encoder(BASE)}
         self.ce = CrossEncoder(BASE, max_len=CE_CFG["max_len"], path=os.path.join(ART, "crossencoder"))
         self.feats = json.load(open(os.path.join(ART, "ranker_features.json")))
-        self.models = {k: lgb.Booster(model_file=os.path.join(ART, f"{k}.txt")) for k in self.feats}
+        import glob
+        self.models = {}
+        for k in self.feats:   # seed-bagged rankers (k__bag*.txt); falls back to a single k.txt
+            files = sorted(glob.glob(os.path.join(ART, f"{k}__bag*.txt"))) or [os.path.join(ART, f"{k}.txt")]
+            self.models[k] = [lgb.Booster(model_file=f) for f in files]
         pairs = pd.read_csv(os.path.join(ART, "pairs.csv"), dtype=str)
         self.pairs = pair_table(pairs)
         self.engines, self.emb = {}, {}
+        self.llm = None
+        self.llm_adapter = os.path.join(ART, "llm_adapter")
+        self.llm2_adapter = os.path.join(ART, "llm2_adapter")
+        self.use_llm = any(k.startswith("r2l_") for k in self.feats)
+        self.use_llm2 = any("llm2_lp" in v for v in self.feats.values())
+        if self.use_llm and not os.path.exists(os.path.join(self.llm_adapter, "adapter_config.json")):
+            raise RuntimeError("rankers were trained with the LLM stage but models/llm_adapter is missing — unzip "
+                               "kaggle/llm_out/adapter_final.zip into models/llm_adapter (or retrain without kaggle/llm_out)")
+        if self.use_llm2 and not os.path.exists(os.path.join(self.llm2_adapter, "adapter_config.json")):
+            raise RuntimeError("rankers use LLM-2 features but models/llm2_adapter is missing")
+        self.last_cands = {}
+        import pickle
+        self.ctx = {}
+        for s_ in SYSTEMS:
+            for v in ("sub", "nosub"):
+                pth = os.path.join(ART, f"ctx_{s_}_{v}.pkl")
+                if os.path.exists(pth):
+                    self.ctx[(s_, v)] = pickle.load(open(pth, "rb"))
 
     def engine(self, s):
         if s not in self.engines:
@@ -313,22 +391,59 @@ class Mapper:
                 eng.dense[tag] = DenseIndex(eng.cs, self.enc[tag], cache_tag, cache=True)
             eng.set_memory(self.train[self.train.coding_system == s])
             self.engines[s] = eng
-            self.emb[s] = _name_emb(eng.cs)
+            import warnings
+            with warnings.catch_warnings():   # memory-mapped on CPU: coupling similarity is cheap; keep RAM and VRAM free
+                warnings.simplefilter("ignore")
+                self.emb[s] = torch.from_numpy(np.load(os.path.join(CACHE, f"emb_names_{BASE}_{eng.cs.name}.npy"),
+                                                       mmap_mode="r")) if os.path.exists(
+                    os.path.join(CACHE, f"emb_names_{BASE}_{eng.cs.name}.npy")) else _name_emb(eng.cs).to("cpu")
             self.display = getattr(self, "display", {})
             self.display[s] = _display_names(self.train, eng.cs)
         return self.engines[s]
 
     def _score(self, cand, stage, s, variant):
         k = f"{stage}_{s}_{variant}"
-        return self.models[k].predict(cand[self.feats[k]])
+        return ranker.predict_any(self.models[k], cand[self.feats[k]])
 
-    def stage12(self, q: pd.DataFrame, s: str):
-        """Candidates → R1 → cross-encoder → R2. Returns candidate table with prob (R2) per row of q."""
+    # ---------------------------------------------------------------- GPU memory management (4 GB card)
+    def _gpu_encoders(self, on: bool):
+        dev = "cuda" if (on and torch.cuda.is_available()) else "cpu"
+        for e in self.enc.values():
+            e.model.to(dev)
+        self.ce.model.to(dev)
+        torch.cuda.empty_cache()
+
+    def _load_llm(self):
+        if self.llm is None:
+            from .llm_rerank import LLMReranker
+            self.llm = LLMReranker(self.llm_adapter)
+            if self.use_llm2:
+                self.llm.add_adapter(self.llm2_adapter, "llm2")
+            log("fine-tuned LLM reranker loaded" + (" (+ LLM-2 adapter)" if self.use_llm2 else ""))
+
+    def _unload_llm(self):
+        if self.llm is not None:
+            del self.llm.model
+            self.llm = None
+            gc.collect(); torch.cuda.empty_cache()
+
+    def stage_a(self, q: pd.DataFrame, s: str):
+        """Phase A (no LLM on the GPU): candidates → R1 → cross-encoder → R2 score."""
         eng = self.engine(s)
         q = q.reset_index(drop=True)
         variant = "sub" if "subconcept" in q and (q["subconcept"] != "").any() else "nosub"
         cand = eng.candidates(q)
         cand["qid"] = cand["row"]
+        if self.ctx:   # chunk-context features (same definitions as training)
+            from . import context as ctxm
+            flags = ctxm.chunk_flags(q.chunk_text, q.chunk_text)
+            classes = ctxm.classes_of(eng.cs)
+            p_ns = self.ctx[(s, "nosub")].proba(q, classes)
+            p_s = self.ctx[(s, "sub")].proba(q, classes) if (variant == "sub" and (s, "sub") in self.ctx) else p_ns
+            f_s = ctxm.features_for(cand, p_s, flags, eng.cs)[["p_type_ctx", "type_ctx_top"]]
+            f_ns = ctxm.features_for(cand, p_ns, flags, eng.cs).rename(
+                columns={"p_type_ctx": "p_type_ctx_ns", "type_ctx_top": "type_ctx_top_ns"})
+            cand = pd.concat([cand, f_s, f_ns], axis=1)
         cand["score"] = self._score(cand, "r1", s, variant)
         cand = cand.sort_values(["qid", "score"], ascending=[True, False])
         cand["r1"] = cand.groupby("qid").cumcount().astype(np.int16)
@@ -338,17 +453,65 @@ class Mapper:
         ce.loc[top.index] = self.ce.score([queries[i] for i in top.qid], [cand_text(eng.cs, k) for k in top.code_idx])
         cand = _add_ce_feats(cand.drop(columns=["score"]), ce.to_numpy())
         cand["score"] = self._score(cand, "r2", s, variant)
+        return cand, variant, q
+
+    def stage_b(self, cand, variant, q, s):
+        """Phase B: fine-tuned LLM(s) score the R2 top-k (LLM alone on the GPU) → R2+LLM score; then probabilities."""
+        if self.use_llm:
+            from .llm_rerank import add_llm_feats, cand_text as llm_text
+            eng = self.engines[s]
+            cand = cand.sort_values(["qid", "score"], ascending=[True, False])
+            sub = q["subconcept"] if "subconcept" in q else pd.Series([""] * len(q))
+
+            def score_top(k, adapter):
+                topk = cand[cand.groupby("qid").cumcount() < k]
+                prompts, nc, idxs = [], [], []
+                for qi, g in topk.groupby("qid", sort=True):
+                    texts = [llm_text(eng.cs, c) for c in g.code_idx]
+                    prompts.append(self.llm.prompt(s, sub.iloc[qi] or "", clean(q.entity.iloc[qi]),
+                                                   context_window(q.entity.iloc[qi], q.chunk_text.iloc[qi], 150), texts))
+                    nc.append(len(texts)); idxs.append(g.index.to_numpy())
+                self.llm.use(adapter)
+                lp = pd.Series(np.nan, index=cand.index)
+                for ix, sc_ in zip(idxs, self.llm.score(prompts, nc)):
+                    lp.loc[ix] = sc_
+                self.llm.use("default")
+                return lp.to_numpy()
+
+            lp = score_top(LLM_TOPK, "default")
+            lp2 = score_top(LLM2_TOPK, "llm2") if (s == "SNOMEDCT_US" and self.use_llm2) else None
+            cand = add_llm_feats(cand.drop(columns=["score"]), lp)
+            if lp2 is not None:
+                cand = add_llm_feats(cand, lp2, prefix="llm2")
+            cand["score"] = self._score(cand, "r2l", s, variant)
         cand["prob"] = _probs(cand)
+        return cand
+
+    def stage12(self, q: pd.DataFrame, s: str):
+        """Single-system convenience wrapper (phase A + phase B)."""
+        cand, variant, qq = self.stage_a(q, s)
+        if self.use_llm:
+            self._gpu_encoders(False); self._load_llm()
+        cand = self.stage_b(cand, variant, qq, s)
+        if self.use_llm:
+            self._unload_llm(); self._gpu_encoders(True)
         return cand, variant
 
     def run(self, q: pd.DataFrame, systems_per_row: dict):
         """systems_per_row: {system: index array of q rows needing it}. Mentions = rows of q."""
-        st = {}
-        for s, idx in systems_per_row.items():
+        st, pa = {}, {}
+        for s, idx in systems_per_row.items():          # phase A: retrieval / cross-encoder / R2 on the GPU
             if len(idx):
-                cand, variant = self.stage12(q.iloc[idx], s)
-                cand["mention_id"] = np.asarray(idx)[cand["qid"].to_numpy()]
-                st[s] = (cand, variant, idx)
+                pa[s] = (self.stage_a(q.iloc[idx], s), idx)
+        if self.use_llm and pa:                          # phase B: free the GPU, load the LLM once
+            self._gpu_encoders(False); self._load_llm()
+        for s, ((cand, variant, qq), idx) in pa.items():
+            cand = self.stage_b(cand, variant, qq, s)
+            cand["mention_id"] = np.asarray(idx)[cand["qid"].to_numpy()]
+            st[s] = (cand, variant, idx)
+        if self.use_llm and pa:
+            self._unload_llm(); self._gpu_encoders(True)
+        self.last_cands = {s: v[0] for s, v in st.items()}
         out = {}
         for s, (cand, variant, idx) in st.items():
             o = [t for t in SYSTEMS if t != s][0]
@@ -361,8 +524,11 @@ class Mapper:
             eng = self.engines[s]
             self.engine(o)
             cp = coupling_features(cand, s, topb, eng.cs, self.engines[o].cs, self.emb[s], self.emb[o], self.pairs)
-            c3 = cand.drop(columns=["score", "prob"]).join(cp)
-            c3["score"] = self._score(c3, "r3", s, variant)
+            if FINAL_STAGE.get(s, "r3") == "r3":
+                c3 = cand.drop(columns=["score", "prob"]).join(cp)
+                c3["score"] = self._score(c3, "r3", s, variant)
+            else:   # final decision = R2 for this system (coupling did not help it in CV)
+                c3 = cand.drop(columns=["prob"])
             best = ranker.top1(c3).reindex(range(len(idx)))
             ok = best["code_idx"].notna()
             ci = best["code_idx"].fillna(0).astype(np.int64).to_numpy()
@@ -387,11 +553,17 @@ class Mapper:
         return out
 
 
-def predict(input_csv, output_csv, review_threshold=0.5):
+def predict(input_csv, output_csv, review_threshold=0.5, assume_subconcept=None):
     t0 = time.time()
     q = read_input(input_csv)
+    if assume_subconcept:
+        if "subconcept" not in q:
+            q["subconcept"] = assume_subconcept
+        else:
+            q["subconcept"] = q["subconcept"].replace("", assume_subconcept)
+        log(f"subconcept assumed = {assume_subconcept} where missing")
     m = Mapper()
-    out = q.copy()
+    out = pd.read_csv(input_csv, dtype=str, keep_default_na=False)   # keep the input's own column names/order
     if "coding_system" in q:
         # long format: rows of the same (entity, chunk) mention are coupled; one requested system per row
         mention = q.groupby(["entity", "chunk_text"], sort=False).ngroup().to_numpy()

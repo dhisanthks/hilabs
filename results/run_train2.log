@@ -1,0 +1,58 @@
+23:20:44 [1/6] lexical OOF + lexical hard negatives
+23:20:46 [2/6] round-1 fine-tuned candidate tables (lexical negatives)
+23:20:48       round-2 fine-tuned candidate tables (iterative hard negatives)
+23:20:51 [3/6] R1 reranker (OOF scores → cross-encoder candidates)
+23:28:27 [4/6] cross-encoder OOF scores (keyed by term id + code)
+23:28:27 [5/6] R2 (+cross-encoder) and R3 (+ICD↔SNOMED coupling)
+23:43:36 [6/6] final bi-encoder and cross-encoder on all training data
+W1017 23:43:55.372000 28824 .venv\Lib\site-packages\torch\distributed\elastic\multiprocessing\redirects.py:29] NOTE: Redirects are currently not supported in Windows or MacOs.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights:  22%|██▏       | 44/199 [00:00<00:00, 418.94it/s]Loading weights:  43%|████▎     | 86/199 [00:00<00:00, 325.78it/s]Loading weights:  63%|██████▎   | 126/199 [00:00<00:00, 353.51it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 548.20it/s]
+[transformers] [1mBertForSequenceClassification LOAD REPORT[0m from: cambridgeltl/SapBERT-from-PubMedBERT-fulltext
+Key               | Status  | 
+------------------+---------+-
+classifier.weight | MISSING | 
+classifier.bias   | MISSING | 
+
+Notes:
+- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
+  ce step 200/3216 loss 2.328
+  ce step 400/3216 loss 2.460
+  ce step 600/3216 loss 2.426
+  ce step 800/3216 loss 1.914
+  ce step 1000/3216 loss 1.752
+  ce step 1200/3216 loss 1.460
+  ce step 1400/3216 loss 1.685
+  ce step 1600/3216 loss 1.763
+  ce step 1800/3216 loss 2.725
+  ce step 2000/3216 loss 1.400
+  ce step 2200/3216 loss 1.978
+  ce step 2400/3216 loss 0.975
+  ce step 2600/3216 loss 1.333
+  ce step 2800/3216 loss 2.010
+  ce step 3000/3216 loss 0.655
+  ce step 3200/3216 loss 1.169
+Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]Writing model shards:   0%|          | 0/1 [00:00<?, ?it/s]
+Traceback (most recent call last):
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\run.py", line 44, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\run.py", line 38, in main
+    pipeline.train(a.train)
+    ~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\src\pipeline.py", line 273, in train
+    ce.save(os.path.join(ART, "crossencoder"))
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\src\crossenc.py", line 89, in save
+    self.model.save_pretrained(path); self.tok.save_pretrained(path)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\.venv\Lib\site-packages\transformers\modeling_utils.py", line 3547, in save_pretrained
+    safe_save_file(shard_state_dict, filename, metadata=metadata)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\dhisa\OneDrive\Desktop\hilabs\.venv\Lib\site-packages\safetensors\torch.py", line 323, in save_file
+    serialize_file(
+    ~~~~~~~~~~~~~~^
+        _flatten_as_ptr(tensors, keep_references_alive), filename, metadata=metadata
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+safetensors._safetensors_rust.SafetensorError: Error while serializing: I/O error: There is not enough space on the disk. (os error 112)

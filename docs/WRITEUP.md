@@ -1,3 +1,5 @@
+> **Superseded:** this is the early working draft. The final write-up with the final numbers is [`HiLabs_TermMapping_Writeup.pdf`](HiLabs_TermMapping_Writeup.pdf) (source: `build_pdf.py`). Final 5-fold CV: ICD-10-CM 68.9%, SNOMED CT 53.8% (63.6% on diagnosis terms).
+
 # Clinical Term Mapping Engine — ICD-10-CM & SNOMED CT
 *HiLabs Hackathon 2026 — technical write-up*  ·  Demo video: _link_  ·  Repository: `dhisanthks/hilabs` (private)
 

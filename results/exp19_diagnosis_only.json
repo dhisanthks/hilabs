@@ -1,0 +1,6 @@
+{
+ "A all rows, subconcept known": 0.6322,
+ "B all rows, no subconcept": 0.6263,
+ "C diagnosis rows only": 0.6289,
+ "D all rows, diagnosis x3 weight": 0.6337
+}
